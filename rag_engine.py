@@ -1,51 +1,93 @@
 import re
-import math
-from collections import Counter
 
-STOPWORDS = {"là","và","của","có","cho","được","những","các","một","này","đó","thì","ở","với","về","như","gì","nào","không","bị","hay","đến"}
-REFERENCES = ("bệnh này","bệnh đó","thuốc này","thuốc đó","nó","trường hợp này","vậy","thế")
+# Một số từ phổ biến không có nhiều ý nghĩa khi tìm câu trả lời
+STOP_WORDS = {
+    "là", "và", "của", "có", "cho", "được", "những", "các", "một",
+    "này", "đó", "thì", "ở", "với", "về", "như", "gì", "nào", "không"
+}
 
-
-def tokenize(text):
-    return [x for x in re.findall(r"[\wÀ-ỹ]+", text.lower(), re.UNICODE) if len(x)>1 and x not in STOPWORDS]
-
-
-def split_sentences(text):
-    return [s.strip() for s in re.split(r"(?<=[.!?])\s+|\n+", text) if s.strip()]
+# Các từ thường dùng để nhắc lại nội dung ở câu hỏi trước
+REFERENCE_WORDS = ["bệnh này", "bệnh đó", "thuốc này", "thuốc đó", "nó", "vậy", "thế"]
 
 
-def resolve_question(question, history):
-    q = question.lower()
-    if history and (any(x in q for x in REFERENCES) or len(tokenize(question)) <= 3):
-        return history[-1].get("question", "") + " " + question
-    return question
+def tach_cau(van_ban):
+    """Tách văn bản thành các câu đơn giản."""
+    return [cau.strip() for cau in re.split(r"(?<=[.!?])\s+|\n+", van_ban) if cau.strip()]
 
 
-def cosine(a, b):
-    ca, cb = Counter(a), Counter(b)
-    common = set(ca) & set(cb)
-    num = sum(ca[x]*cb[x] for x in common)
-    da = math.sqrt(sum(v*v for v in ca.values()))
-    db = math.sqrt(sum(v*v for v in cb.values()))
-    return num/(da*db) if da and db else 0.0
+def tach_tu(text):
+    """Chuyển về chữ thường và lấy các từ quan trọng."""
+    cac_tu = re.findall(r"[\wÀ-ỹ]+", text.lower(), re.UNICODE)
+    return [tu for tu in cac_tu if len(tu) > 1 and tu not in STOP_WORDS]
 
 
-def retrieve(document, question, history=None, top_k=3):
-    history = history or []
-    query = tokenize(resolve_question(question, history))
-    ranked = []
-    for sentence in split_sentences(document):
-        score = cosine(query, tokenize(sentence))
-        ranked.append((score, sentence))
-    ranked.sort(reverse=True, key=lambda x:x[0])
-    return ranked[:top_k]
+def xu_ly_cau_hoi(cau_hoi, lich_su):
+    """Ghép câu hỏi trước nếu câu hiện tại có từ tham chiếu như 'bệnh này'."""
+    cau_hoi_thuong = cau_hoi.lower()
+
+    if lich_su:
+        co_tham_chieu = any(tu in cau_hoi_thuong for tu in REFERENCE_WORDS)
+        cau_hoi_ngan = len(tach_tu(cau_hoi)) <= 3
+
+        if co_tham_chieu or cau_hoi_ngan:
+            cau_truoc = lich_su[-1].get("question", "")
+            return cau_truoc + " " + cau_hoi
+
+    return cau_hoi
 
 
-def answer_question(document, question, history=None, threshold=0.12):
+def tinh_diem(cau, cau_hoi):
+    """Tính độ giống nhau dựa trên số từ chung."""
+    tu_cau = set(tach_tu(cau))
+    tu_hoi = set(tach_tu(cau_hoi))
+
+    if len(tu_hoi) == 0:
+        return 0
+
+    so_tu_chung = len(tu_cau.intersection(tu_hoi))
+    return so_tu_chung / len(tu_hoi)
+
+
+def answer_question(document, question, history=None, threshold=0.1):
+    """Tìm câu trong văn bản phù hợp nhất với câu hỏi."""
+    if history is None:
+        history = []
+
     if not document.strip():
-        return {"answer":"Bạn cần nhập văn bản y tế trước.","score":0.0,"sources":[]}
-    ranked = retrieve(document, question, history)
-    if not ranked or ranked[0][0] < threshold:
-        return {"answer":"Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.","score":ranked[0][0] if ranked else 0.0,"sources":[]}
-    score, sentence = ranked[0]
-    return {"answer":sentence,"score":score,"sources":[s for sc,s in ranked if sc >= threshold]}
+        return {
+            "answer": "Bạn cần nhập văn bản y tế trước.",
+            "score": 0,
+            "sources": []
+        }
+
+    if not question.strip():
+        return {
+            "answer": "Bạn cần nhập câu hỏi.",
+            "score": 0,
+            "sources": []
+        }
+
+    cau_hoi_day_du = xu_ly_cau_hoi(question, history)
+    cau_tot_nhat = ""
+    diem_cao_nhat = 0
+
+    for cau in tach_cau(document):
+        diem = tinh_diem(cau, cau_hoi_day_du)
+
+        if diem > diem_cao_nhat:
+            diem_cao_nhat = diem
+            cau_tot_nhat = cau
+
+    # Không trả lời nếu câu hỏi không liên quan đến văn bản
+    if diem_cao_nhat < threshold:
+        return {
+            "answer": "Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.",
+            "score": diem_cao_nhat,
+            "sources": []
+        }
+
+    return {
+        "answer": cau_tot_nhat,
+        "score": diem_cao_nhat,
+        "sources": [cau_tot_nhat]
+    }
