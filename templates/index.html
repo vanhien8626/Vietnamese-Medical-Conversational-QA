@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỏi đáp văn bản y tế tiếng Việt</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="container">
+    <header>
+        <h1>Hệ thống hỏi đáp văn bản y tế</h1>
+        <p>Đọc hiểu hội thoại cho văn bản y tế tiếng Việt</p>
+    </header>
+
+    <form method="post">
+        <section class="card">
+            <label for="document">Văn bản y tế</label>
+            <textarea id="document" name="document" rows="10" placeholder="Nhập hoặc dán văn bản y tế tại đây...">{{ document }}</textarea>
+        </section>
+
+        <section class="card chat">
+            <h2>Hội thoại</h2>
+            <div class="messages">
+                {% if not history %}
+                    <p class="empty">Chưa có câu hỏi nào.</p>
+                {% endif %}
+                {% for item in history %}
+                    <div class="message user"><strong>Bạn:</strong> {{ item.question }}</div>
+                    <div class="message bot"><strong>Hệ thống:</strong> {{ item.answer }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="question-row">
+                <input name="question" placeholder="Nhập câu hỏi về văn bản..." autocomplete="off">
+                <button type="submit" name="action" value="ask">Gửi</button>
+                <button class="secondary" type="submit" name="action" value="clear">Xóa</button>
+            </div>
+        </section>
+    </form>
+
+    <p class="warning">Thông tin chỉ phục vụ học tập, không thay thế tư vấn hoặc chẩn đoán của bác sĩ.</p>
+</main>
+</body>
+</html>
