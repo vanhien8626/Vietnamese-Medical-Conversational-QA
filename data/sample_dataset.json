@@ -1,0 +1,19 @@
+[
+  {
+    "id":"conv_001",
+    "context":"Sốt xuất huyết là bệnh truyền nhiễm do virus Dengue gây ra và lây truyền qua muỗi Aedes. Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn. Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan. Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi.",
+    "turns":[
+      {"question":"Sốt xuất huyết có triệu chứng gì?","answer":"Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn."},
+      {"question":"Bệnh này có nguy hiểm không?","answer":"Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan."},
+      {"question":"Khi nào cần đi khám?","answer":"Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi."}
+    ]
+  },
+  {
+    "id":"conv_002",
+    "context":"Cảm cúm thường do virus cúm gây ra. Các triệu chứng có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi. Người bệnh nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng. Nếu khó thở, đau ngực hoặc tình trạng nặng lên, cần liên hệ cơ sở y tế.",
+    "turns":[
+      {"question":"Cảm cúm có triệu chứng gì?","answer":"Các triệu chứng có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi."},
+      {"question":"Người bệnh nên làm gì?","answer":"Người bệnh nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng."}
+    ]
+  }
+]
