@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vietnamese Medical Conversational QA</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7f9;color:#263238}.wrap{width:min(1050px,92%);margin:30px auto}header{text-align:center;margin-bottom:24px}header h1{margin-bottom:7px}header p{color:#607d8b}.card{background:#fff;padding:20px;border-radius:14px;margin-bottom:18px;box-shadow:0 2px 12px #00000012}label,h2{display:block;font-weight:700;margin-bottom:10px}textarea{width:100%;min-height:220px;padding:13px;border:1px solid #ccd6db;border-radius:9px;font:15px Arial;line-height:1.5;resize:vertical}.messages{min-height:190px;max-height:360px;overflow:auto;margin-bottom:15px}.msg{max-width:82%;padding:11px 14px;border-radius:11px;margin:9px 0;line-height:1.45}.user{margin-left:auto;background:#e3f2fd}.bot{background:#e8f5e9}.empty{text-align:center;color:#90a4ae;padding:55px 0}.row{display:flex;gap:8px}.row input{flex:1;padding:12px;border:1px solid #ccd6db;border-radius:9px;font-size:15px}button{padding:0 20px;border:0;border-radius:9px;background:#1976d2;color:#fff;font-weight:bold;cursor:pointer}.clear{background:#78909c}.note{text-align:center;color:#795548;font-size:14px}@media(max-width:650px){.row{flex-wrap:wrap}.row input{flex-basis:100%}button{padding:12px 20px}.msg{max-width:94%}}
+</style>
+</head>
+<body><main class="wrap"><header><h1>Hệ thống hỏi đáp văn bản y tế</h1><p>Đọc hiểu hội thoại cho văn bản y tế tiếng Việt</p></header>
+<section class="card"><label>Văn bản y tế</label><textarea id="doc">Sốt xuất huyết là bệnh truyền nhiễm do virus Dengue gây ra và lây truyền qua muỗi Aedes. Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn. Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan. Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi.</textarea></section>
+<section class="card"><h2>Hội thoại</h2><div class="messages" id="messages"><p class="empty" id="empty">Hãy đặt câu hỏi về văn bản phía trên.</p></div><div class="row"><input id="question" placeholder="Ví dụ: Sốt xuất huyết có triệu chứng gì?"><button onclick="ask()">Gửi</button><button class="clear" onclick="clearChat()">Xóa</button></div></section><p class="note">Hệ thống chỉ phục vụ học tập, không thay thế tư vấn hoặc chẩn đoán của bác sĩ.</p></main>
+<script>
+let history=[];
+const stop=new Set(['là','và','của','có','cho','được','những','các','một','này','đó','thì','ở','với','về','như','gì','nào','không','bị']);
+function words(t){return new Set(t.toLowerCase().normalize('NFC').match(/[\p{L}\p{N}]+/gu)?.filter(x=>x.length>1&&!stop.has(x))||[])}
+function split(t){return t.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).filter(Boolean)}
+function answer(doc,q){let expanded=q;let low=q.toLowerCase();if(history.length&&(words(q).size<=4||['bệnh này','thuốc này','nó','vậy','thế'].some(x=>low.includes(x))))expanded=history[history.length-1].q+' '+q;let qw=words(expanded),best='',score=0;for(const s of split(doc)){let sw=words(s),over=[...qw].filter(x=>sw.has(x)).length,sc=over/Math.max(1,qw.size);if(sc>score){score=sc;best=s}}return !best||score<.1?'Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.':best}
+function add(text,cls,label){document.getElementById('empty')?.remove();let d=document.createElement('div');d.className='msg '+cls;d.innerHTML='<strong>'+label+':</strong> '+text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));document.getElementById('messages').appendChild(d);d.scrollIntoView({behavior:'smooth'})}
+function ask(){let doc=document.getElementById('doc').value.trim(),q=document.getElementById('question').value.trim();if(!q)return;add(q,'user','Bạn');let a=doc?answer(doc,q):'Bạn cần nhập văn bản y tế trước.';add(a,'bot','Hệ thống');history.push({q,a});document.getElementById('question').value=''}
+function clearChat(){history=[];document.getElementById('messages').innerHTML='<p class="empty" id="empty">Hãy đặt câu hỏi về văn bản phía trên.</p>'}
+document.getElementById('question').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
+</script></body></html>
