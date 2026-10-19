@@ -1,11 +1,11 @@
 import re
 from collections import Counter
-from rag_engine import answer_question
+from rag_engine import DocumentIndex, normalize_text
 
 
 def chuan_hoa(text):
     """Chuẩn hóa câu để so sánh kết quả."""
-    text = text.lower().strip()
+    text = normalize_text(text).lower().strip()
     text = re.sub(r"[^\wÀ-ỹ\s]", " ", text, flags=re.UNICODE)
     return " ".join(text.split())
 
@@ -37,63 +37,85 @@ def f1_score(cau_du_doan, cau_dung):
     return 2 * precision * recall / (precision + recall)
 
 
-def danh_gia_du_lieu(du_lieu):
-    tong_em = 0
-    tong_f1 = 0
-    tong_cau_hoi = 0
-    hoi_thoai_dung = 0
+def validate_dataset(data):
+    """Báo lỗi dữ liệu bằng vị trí cụ thể, không coi tập rỗng là đánh giá thành công."""
+    if not isinstance(data, list) or not data:
+        raise ValueError('Dataset phải là danh sách hội thoại không rỗng.')
+    for i, conversation in enumerate(data):
+        location = f'Hội thoại {i + 1}'
+        if not isinstance(conversation, dict):
+            raise ValueError(f'{location}: phải là object.')
+        if not isinstance(conversation.get('context'), str) or not conversation['context'].strip():
+            raise ValueError(f'{location}: context phải là chuỗi không rỗng.')
+        turns = conversation.get('turns')
+        if not isinstance(turns, list) or not turns:
+            raise ValueError(f'{location}: turns phải là danh sách không rỗng.')
+        for j, turn in enumerate(turns):
+            for field in ('question', 'answer'):
+                if not isinstance(turn, dict) or not isinstance(turn.get(field), str) or not turn[field].strip():
+                    raise ValueError(f'{location}, lượt {j + 1}: {field} phải là chuỗi không rỗng.')
 
-    for hoi_thoai in du_lieu:
-        lich_su = []
-        hoi_thoai_on_dinh = True
 
-        for luot in hoi_thoai["turns"]:
-            ket_qua = answer_question(
-                hoi_thoai["context"],
-                luot["question"],
-                lich_su
-            )
-
-            cau_du_doan = ket_qua["answer"]
-            cau_dung = luot["answer"]
-
-            em = exact_match(cau_du_doan, cau_dung)
-            f1 = f1_score(cau_du_doan, cau_dung)
-
-            tong_em += em
-            tong_f1 += f1
-            tong_cau_hoi += 1
-
-            if f1 < 0.5:
-                hoi_thoai_on_dinh = False
-
-            lich_su.append({
-                "question": luot["question"],
-                "answer": cau_du_doan
+def evaluate_dataset(data):
+    validate_dataset(data)
+    predictions = []
+    consistent = 0
+    for i, conversation in enumerate(data):
+        index = DocumentIndex(conversation['context'])
+        history = []
+        scores = []
+        for j, turn in enumerate(conversation['turns']):
+            result = index.answer(turn['question'], history)
+            em = exact_match(result['answer'], turn['answer'])
+            f1 = f1_score(result['answer'], turn['answer'])
+            scores.append(f1)
+            predictions.append({
+                'conversation_index': i, 'turn_index': j,
+                'question': turn['question'], 'expected': turn['answer'],
+                'prediction': result['answer'], 'sources': result['sources'],
+                'retrieval_score': result['score'], 'exact_match': em, 'f1': f1,
             })
-
-        if hoi_thoai_on_dinh:
-            hoi_thoai_dung += 1
-
-    if tong_cau_hoi == 0:
-        return 0, 0, 0
-
-    em_trung_binh = tong_em / tong_cau_hoi
-    f1_trung_binh = tong_f1 / tong_cau_hoi
-    consistency = hoi_thoai_dung / len(du_lieu)
-
-    return em_trung_binh, f1_trung_binh, consistency
+            history.append({'question': turn['question'], 'answer': result['answer']})
+        consistent += all(score >= 0.5 for score in scores)
+    return {
+        'conversations': len(data), 'questions': len(predictions),
+        'exact_match': sum(row['exact_match'] for row in predictions) / len(predictions),
+        'f1': sum(row['f1'] for row in predictions) / len(predictions),
+        'conversation_consistency': consistent / len(data),
+        'predictions': predictions,
+    }
 
 
-if __name__ == "__main__":
+def danh_gia_du_lieu(du_lieu):
+    """Giữ định dạng trả về cũ: EM, F1, conversation consistency."""
+    report = evaluate_dataset(du_lieu)
+    return report['exact_match'], report['f1'], report['conversation_consistency']
+
+
+def main(argv=None):
+    import argparse
     import json
+    from pathlib import Path
 
-    with open("data/sample_dataset.json", "r", encoding="utf-8") as file:
-        du_lieu = json.load(file)
+    parser = argparse.ArgumentParser(description='Đánh giá truy xuất trên dữ liệu hội thoại JSON.')
+    parser.add_argument('--data', type=Path, default=Path(__file__).resolve().parent / 'data/sample_dataset.json')
+    parser.add_argument('--output', type=Path, help='Lưu JSON gồm chỉ số và từng câu dự đoán; không ghi đè tệp có sẵn.')
+    args = parser.parse_args(argv)
+    try:
+        data = json.loads(args.data.read_text(encoding='utf-8-sig'))
+        report = evaluate_dataset(data)
+        if args.output:
+            with args.output.open('x', encoding='utf-8') as output:
+                json.dump(report, output, ensure_ascii=False, indent=2)
+                output.write('\n')
+    except (OSError, ValueError, UnicodeError) as exc:
+        parser.exit(1, f'Lỗi đánh giá: {exc}\n')
+    print(f"Đã đánh giá {report['conversations']} hội thoại / {report['questions']} câu hỏi.")
+    print(f"Exact Match: {report['exact_match']:.2%}")
+    print(f"F1 Score: {report['f1']:.2%}")
+    print(f"Conversation Consistency: {report['conversation_consistency']:.2%}")
+    return 0
 
-    em, f1, consistency = danh_gia_du_lieu(du_lieu)
 
-    print("===== KẾT QUẢ ĐÁNH GIÁ =====")
-    print(f"Exact Match: {em:.2%}")
-    print(f"F1 Score: {f1:.2%}")
-    print(f"Conversation Consistency: {consistency:.2%}")
+if __name__ == '__main__':
+    raise SystemExit(main())
