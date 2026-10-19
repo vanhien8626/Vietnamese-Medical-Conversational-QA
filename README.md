@@ -1,17 +1,28 @@
 # MedTalk — Hỏi đáp y tế tiếng Việt
 
-Ứng dụng Flask trả lời câu hỏi bằng bằng chứng trích từ tài liệu người dùng cung cấp. Giao diện hỗ trợ điện thoại, gợi ý câu hỏi và xem nguồn trả lời. Đổi tài liệu sẽ bắt đầu hội thoại mới.
+Bộ mã Python trả lời câu hỏi bằng bằng chứng trích từ tài liệu người dùng cung cấp. Hỗ trợ ngữ cảnh hội thoại và đánh giá trên dữ liệu mẫu.
 
 ## Cài đặt và chạy
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
+python evaluate.py
 ```
 
-Mở `http://127.0.0.1:5000`. Bản demo không cần GPU, mô hình lớn hoặc API key.
+Phần truy xuất, đánh giá và kiểm thử chỉ dùng thư viện chuẩn Python; không cần cài thêm gói, GPU, mô hình lớn hoặc API key.
+
+## Hỏi đáp bằng Python
+
+```python
+from rag_engine import answer_question
+
+van_ban = "Người bệnh nên nghỉ ngơi và uống đủ nước."
+ket_qua = answer_question(van_ban, "Người bệnh nên làm gì?")
+print(ket_qua["answer"])
+```
+
+Truyền danh sách `history` gồm các mục `question` và `answer` khi cần ngữ cảnh hội thoại. Bắt đầu danh sách mới khi đổi tài liệu.
 
 ## Truy xuất và đánh giá
 
@@ -35,10 +46,8 @@ python dataset_loader.py --output data/vicoqa
 
 ## Cấu trúc chính
 
-- `app.py`: ứng dụng Flask và lịch sử hội thoại.
 - `rag_engine.py`: truy xuất bằng chứng.
 - `evaluate.py`: đánh giá EM, F1 và tính nhất quán hội thoại.
-- `templates/index.html`, `static/`: giao diện.
-- `tests/test_workflow.py`: kiểm thử truy xuất và ứng dụng.
+- `tests/test_workflow.py`: kiểm thử truy xuất.
 
 Prototype phục vụ học tập, không thay thế tư vấn hoặc chẩn đoán của bác sĩ.
