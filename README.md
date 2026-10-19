@@ -20,7 +20,7 @@ Hỏi đáp tương tác trên tài liệu mẫu:
 python chat.py
 ```
 
-Nhập `/thoat` để kết thúc hoặc `/xoa` để xóa lịch sử. Lịch sử chỉ nằm trong bộ nhớ và không tự ghi ra đĩa.
+Nhập `/thoat` để kết thúc, `/xoa` để xóa phiên hiện tại, `/lichsu` để xem các lượt hỏi đáp hoặc `/trogiup` để xem lệnh. Lịch sử chỉ nằm trong bộ nhớ trừ khi bạn bật `--export`.
 
 Dùng tài liệu UTF-8 của bạn; hỗ trợ tệp có BOM:
 
@@ -33,6 +33,16 @@ Hỏi một câu và xuất kết quả JSON để xử lý tiếp:
 ```bash
 python chat.py --document tai_lieu.txt --question "Triệu chứng thường gặp là gì?" --json
 ```
+
+Xem tối đa 3 câu bằng chứng theo thứ hạng và lưu phiên hỏi đáp:
+
+```bash
+python chat.py --document tai_lieu.txt --top-k 3 --export hoi_thoai.json
+```
+
+`--top-k` hiển thị các ứng viên vượt ngưỡng, kèm số thứ tự câu và điểm; câu đứng đầu vẫn là câu trả lời. JSON có thêm `candidates`, còn `sources` chỉ chứa nguồn của câu trả lời. Không đảm bảo luôn đủ số câu yêu cầu.
+
+`--export` ghi tài liệu, cấu hình và các lượt hỏi đáp của phiên hiện tại vào JSON khi thoát bình thường, gặp EOF hoặc Ctrl+C ở lời nhắc nhập. Tệp có sẵn sẽ không bị ghi đè. `/xoa` xóa cả ngữ cảnh và các lượt sẽ xuất. Tệp xuất chứa nội dung tài liệu nên hãy chọn nơi lưu phù hợp.
 
 Có thể đặt ngưỡng bằng `--threshold 0.2`. Ngưỡng cao hơn khiến bộ truy xuất từ chối nhiều câu hơn; điểm này không phải xác suất câu trả lời đúng. Xem tham số bằng `python chat.py --help`.
 
@@ -58,6 +68,8 @@ print(index.answer("Người bệnh nên làm gì?"))
 print(index.search("Nghỉ ngơi?", top_k=3))
 ```
 
+Chỉ mục đảo ánh xạ từ khóa sang câu, giúp chỉ chấm các câu có từ khóa hoặc từ mở rộng phù hợp thay vì quét toàn bộ tài liệu cho mỗi câu hỏi.
+
 `search` trả về bằng chứng theo điểm giảm dần, kèm `sentence_index` bắt đầu từ 0. Khi điểm bằng nhau, thứ tự câu trong tài liệu được giữ nguyên. Tiếng Việt được chuẩn hóa Unicode NFC trước khi truy xuất; không hỗ trợ tự động bỏ dấu hoặc sửa lỗi chính tả.
 
 ## Truy xuất và đánh giá
@@ -75,7 +87,7 @@ python evaluate.py
 python evaluate.py --data data/sample_dataset.json --output report.json
 ```
 
-Tệp đầu vào phải là danh sách hội thoại có `context` và danh sách `turns`; mỗi lượt có `question`, `answer` là chuỗi không rỗng. Dataset rỗng hoặc sai cấu trúc sẽ báo lỗi. Báo cáo gồm EM/F1, tính nhất quán, số hội thoại/câu hỏi và từng dự đoán; lệnh từ chối ghi đè tệp có sẵn. Đường dẫn dữ liệu mẫu mặc định không phụ thuộc thư mục đang chạy.
+Tệp đầu vào phải là danh sách hội thoại có `context` và danh sách `turns`; mỗi lượt có `question` là chuỗi không rỗng. `answer` chấp nhận một chuỗi hoặc danh sách các đáp án chuẩn không rỗng; EM và F1 lấy điểm tốt nhất trên các đáp án này. Dataset rỗng hoặc sai cấu trúc sẽ báo lỗi. Báo cáo gồm EM/F1, tính nhất quán, số hội thoại/câu hỏi, số lượt không tìm được bằng chứng (`unanswered`), F1 từng hội thoại và từng dự đoán; lệnh từ chối ghi đè tệp có sẵn. Đường dẫn dữ liệu mẫu mặc định không phụ thuộc thư mục đang chạy.
 
 Trên dữ liệu mẫu gồm 2 hội thoại / 5 câu hỏi: EM, F1 và conversation consistency đều đạt 100%. Tập mẫu nhỏ chưa chứng minh chất lượng trên dữ liệu thực tế. Điểm truy xuất là điểm xếp hạng, không phải xác suất đúng.
 

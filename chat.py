@@ -5,7 +5,7 @@ import math
 import sys
 from pathlib import Path
 
-from rag_engine import DocumentIndex
+from rag_engine import DocumentIndex, FALLBACK
 
 
 def main(argv=None):
@@ -14,7 +14,13 @@ def main(argv=None):
     parser.add_argument('--question', help='Hỏi một câu rồi thoát.')
     parser.add_argument('--json', action='store_true', help='Xuất JSON khi dùng --question.')
     parser.add_argument('--threshold', type=float, default=0.15, help='Ngưỡng truy xuất không âm (mặc định 0.15).')
+    parser.add_argument('--top-k', type=int, default=1, help='Số bằng chứng xếp hạng hiển thị (mặc định 1).')
+    parser.add_argument('--export', type=Path, help='Lưu phiên hỏi đáp thành JSON; không ghi đè tệp có sẵn.')
     args = parser.parse_args(argv)
+    if args.top_k < 1:
+        parser.error('--top-k phải là số nguyên dương.')
+    if args.export and args.export.exists():
+        parser.error('Tệp xuất đã tồn tại; hãy chọn tên khác.')
     if args.json and args.question is None:
         parser.error('--json cần đi cùng --question.')
     if not math.isfinite(args.threshold) or args.threshold < 0:
@@ -29,14 +35,32 @@ def main(argv=None):
             parser.error('Tài liệu rỗng.')
         index = DocumentIndex(document)
         history = []
+        turns = []
 
         def ask(question):
-            return index.answer(question, history, threshold=args.threshold)
+            matches = index.search(question, history, threshold=args.threshold, top_k=args.top_k)
+            best = matches[0] if matches else None
+            result = {
+                'answer': best['text'] if best else FALLBACK,
+                'score': best['score'] if best else 0,
+                'sources': [best['text']] if best else [],
+                'candidates': matches,
+            }
+            turns.append({'question': question, **result})
+            return result
+
+        def export():
+            if args.export:
+                with args.export.open('x', encoding='utf-8') as output:
+                    json.dump({'document': index.document, 'threshold': args.threshold,
+                               'top_k': args.top_k, 'turns': turns}, output,
+                              ensure_ascii=False, indent=2)
+                    output.write('\n')
 
         def display(result):
             print('Trả lời:', result['answer'])
-            for source in result['sources']:
-                print('Bằng chứng:', source)
+            for candidate in result['candidates']:
+                print(f"  Câu {candidate['sentence_index'] + 1} · {candidate['score']:.3f}: {candidate['text']}")
             print(f"Điểm truy xuất: {result['score']:.3f} (không phải xác suất đúng)")
 
         if args.question is not None:
@@ -47,8 +71,9 @@ def main(argv=None):
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             else:
                 display(result)
+            export()
             return 0
-        print('Hỏi đáp từ tài liệu · /thoat để dừng · /xoa để xóa lịch sử')
+        print('Hỏi đáp từ tài liệu · /trogiup để xem lệnh')
         while True:
             try:
                 question = input('Bạn: ').strip()
@@ -57,8 +82,18 @@ def main(argv=None):
                 break
             if question == '/thoat':
                 break
+            if question == '/trogiup':
+                print('/thoat: kết thúc · /xoa: xóa phiên hiện tại · /lichsu: xem lịch sử')
+                continue
+            if question == '/lichsu':
+                for number, turn in enumerate(turns, 1):
+                    print(f"{number}. {turn['question']}\n   {turn['answer']}")
+                if not turns:
+                    print('Chưa có lịch sử.')
+                continue
             if question == '/xoa':
                 history.clear()
+                turns.clear()
                 print('Đã xóa lịch sử.')
                 continue
             if not question:
@@ -67,9 +102,10 @@ def main(argv=None):
             display(result)
             history.append({'question': question, 'answer': result['answer']})
             history[:] = history[-10:]
+        export()
         return 0
     except (OSError, UnicodeError) as exc:
-        print(f'Không đọc được tài liệu: {exc}', file=sys.stderr)
+        print(f'Lỗi đọc/ghi tệp: {exc}', file=sys.stderr)
         return 1
 
 

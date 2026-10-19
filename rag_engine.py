@@ -2,7 +2,7 @@
 import math
 import re
 import unicodedata
-from collections import Counter
+from collections import Counter, defaultdict
 
 STOP_WORDS = {
     'là', 'và', 'của', 'có', 'cho', 'được', 'những', 'các', 'một',
@@ -57,6 +57,15 @@ class DocumentIndex:
         }
         self._unknown_weight = math.log(1 + len(self.sentences) + 1)
         self._lower_sentences = tuple(sentence.lower() for sentence in self.sentences)
+        self._postings = defaultdict(set)
+        for position, tokens in enumerate(self.tokens):
+            for token in tokens:
+                self._postings[token].add(position)
+        self._intent_positions = {
+            phrase: frozenset(i for i, text in enumerate(self._lower_sentences)
+                              if _contains_phrase(text, phrase))
+            for phrase in INTENTS
+        }
 
     def search(self, question, history=None, *, threshold=0.15, top_k=3):
         """Trả về tối đa top_k bằng chứng theo điểm giảm dần."""
@@ -75,14 +84,15 @@ class DocumentIndex:
             previous = set(tach_tu(history[-1].get('question', '')))
         denominator = sum(self._weights.get(token, self._unknown_weight) for token in query)
         ranked = []
-        for position, (sentence, tokens, lower) in enumerate(zip(
-            self.sentences, self.tokens, self._lower_sentences
-        )):
+        # Chỉ chấm các câu có từ khóa; giữ thứ tự gốc để xử lý điểm hòa.
+        candidates = set().union(*(self._postings.get(token, ()) for token in query | expansion))
+        for position in sorted(candidates):
+            sentence, tokens = self.sentences[position], self.tokens[position]
             overlap = tokens & query
             direct = sum(self._weights[token] for token in overlap) / denominator
             intent = min(1, len(tokens & expansion) / 2) if expansion else 0
             context = len(tokens & previous) / len(previous) if previous else 0
-            phrase_bonus = 0.2 if any(_contains_phrase(lower, phrase) for phrase in active_intents) else 0
+            phrase_bonus = 0.2 if any(position in self._intent_positions[phrase] for phrase in active_intents) else 0
             score = 0.7 * direct + 0.5 * intent + phrase_bonus
             if overlap or intent:
                 score += 0.05 * context

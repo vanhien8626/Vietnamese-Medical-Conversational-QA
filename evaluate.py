@@ -51,23 +51,28 @@ def validate_dataset(data):
         if not isinstance(turns, list) or not turns:
             raise ValueError(f'{location}: turns phải là danh sách không rỗng.')
         for j, turn in enumerate(turns):
-            for field in ('question', 'answer'):
-                if not isinstance(turn, dict) or not isinstance(turn.get(field), str) or not turn[field].strip():
-                    raise ValueError(f'{location}, lượt {j + 1}: {field} phải là chuỗi không rỗng.')
+            if not isinstance(turn, dict) or not isinstance(turn.get('question'), str) or not turn['question'].strip():
+                raise ValueError(f'{location}, lượt {j + 1}: question phải là chuỗi không rỗng.')
+            gold = turn.get('answer')
+            answers = gold if isinstance(gold, list) else [gold]
+            if not answers or any(not isinstance(text, str) or not text.strip() for text in answers):
+                raise ValueError(f'{location}, lượt {j + 1}: answer phải là chuỗi hoặc danh sách chuỗi không rỗng.')
 
 
 def evaluate_dataset(data):
     validate_dataset(data)
     predictions = []
     consistent = 0
+    conversation_reports = []
     for i, conversation in enumerate(data):
         index = DocumentIndex(conversation['context'])
         history = []
         scores = []
         for j, turn in enumerate(conversation['turns']):
             result = index.answer(turn['question'], history)
-            em = exact_match(result['answer'], turn['answer'])
-            f1 = f1_score(result['answer'], turn['answer'])
+            gold = turn['answer'] if isinstance(turn['answer'], list) else [turn['answer']]
+            em = max(exact_match(result['answer'], answer) for answer in gold)
+            f1 = max(f1_score(result['answer'], answer) for answer in gold)
             scores.append(f1)
             predictions.append({
                 'conversation_index': i, 'turn_index': j,
@@ -76,12 +81,19 @@ def evaluate_dataset(data):
                 'retrieval_score': result['score'], 'exact_match': em, 'f1': f1,
             })
             history.append({'question': turn['question'], 'answer': result['answer']})
-        consistent += all(score >= 0.5 for score in scores)
+        is_consistent = all(score >= 0.5 for score in scores)
+        consistent += is_consistent
+        conversation_reports.append({
+            'conversation_index': i, 'questions': len(scores),
+            'f1': sum(scores) / len(scores), 'consistent': is_consistent,
+        })
     return {
         'conversations': len(data), 'questions': len(predictions),
         'exact_match': sum(row['exact_match'] for row in predictions) / len(predictions),
         'f1': sum(row['f1'] for row in predictions) / len(predictions),
         'conversation_consistency': consistent / len(data),
+        'unanswered': sum(not row['sources'] for row in predictions),
+        'conversation_reports': conversation_reports,
         'predictions': predictions,
     }
 
