@@ -17,6 +17,9 @@ def index():
             return render_template("index.html", document=document, history=[])
         document = request.form.get("document", "").strip()
         question = request.form.get("question", "").strip()
+        if document != session.get("document", SAMPLE_TEXT):
+            history = []
+            session["history"] = []
         session["document"] = document
         if question:
             result = answer_question(document, question, history)

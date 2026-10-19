@@ -1,4 +1,6 @@
 import re
+import math
+from collections import Counter
 
 # Các từ phổ biến ít có ý nghĩa khi tìm câu trả lời
 STOP_WORDS = {
@@ -29,40 +31,6 @@ def tach_tu(text):
     return [tu for tu in cac_tu if len(tu) > 1 and tu not in STOP_WORDS]
 
 
-def xu_ly_cau_hoi(cau_hoi, lich_su):
-    """Bổ sung câu hỏi trước khi câu hiện tại phụ thuộc ngữ cảnh."""
-    if not lich_su:
-        return cau_hoi
-
-    cau_hoi_thuong = cau_hoi.lower()
-    co_tham_chieu = any(cum in cau_hoi_thuong for cum in REFERENCE_WORDS)
-    cau_hoi_ngan = len(tach_tu(cau_hoi)) <= 2
-
-    if co_tham_chieu or cau_hoi_ngan:
-        cau_truoc = lich_su[-1].get("question", "")
-        return cau_truoc + " " + cau_hoi
-
-    return cau_hoi
-
-
-def tinh_diem(cau, cau_hoi):
-    """Tính điểm dựa trên số từ chung và độ chính xác của từ khóa."""
-    tu_cau = set(tach_tu(cau))
-    tu_hoi = set(tach_tu(cau_hoi))
-
-    if not tu_cau or not tu_hoi:
-        return 0
-
-    so_tu_chung = len(tu_cau.intersection(tu_hoi))
-
-    # Câu trả lời phải chứa được nhiều từ của câu hỏi,
-    # đồng thời tránh ưu tiên câu quá dài chỉ vì có một vài từ chung.
-    recall = so_tu_chung / len(tu_hoi)
-    precision = so_tu_chung / len(tu_cau)
-
-    return 0.7 * recall + 0.3 * precision
-
-
 def answer_question(document, question, history=None, threshold=0.15):
     """Tìm câu phù hợp nhất trong văn bản để trả lời câu hỏi."""
     if history is None:
@@ -86,16 +54,46 @@ def answer_question(document, question, history=None, threshold=0.15):
         }
 
     cac_cau = tach_cau(document)
-    cau_hoi_day_du = xu_ly_cau_hoi(question, history)
+    # IDF giảm trọng số tên bệnh lặp lại trong câu hỏi và ưu tiên ý định.
+    tokenized = [set(tach_tu(sentence)) for sentence in cac_cau]
+    frequencies = Counter(token for tokens in tokenized for token in tokens)
+    query = set(tach_tu(question))
+    intents = {
+        "triệu chứng": {"triệu", "chứng", "biểu", "hiện"},
+        "nguy hiểm": {"nặng", "sốc", "biến", "chứng", "tử", "vong", "nguy", "hiểm"},
+        "nguyên nhân": {"do", "virus", "vi", "khuẩn", "nguyên", "nhân"},
+        "phòng ngừa": {"phòng", "ngừa", "tránh", "tiêm", "vắc"},
+    }
+    expansion = set()
+    for phrase, words in intents.items():
+        if phrase in question.lower():
+            expansion.update(words)
+    previous = set(tach_tu(history[-1].get("question", ""))) if history and any(
+        phrase in question.lower() for phrase in REFERENCE_WORDS
+    ) else set()
 
+    def weight(token):
+        return math.log(1 + (len(cac_cau) + 1) / (frequencies[token] + 1))
+
+    denominator = sum(weight(token) for token in query) or 1
     cau_tot_nhat = ""
     diem_cao_nhat = 0
-
-    for cau in cac_cau:
-        diem = tinh_diem(cau, cau_hoi_day_du)
-        if diem > diem_cao_nhat:
-            diem_cao_nhat = diem
-            cau_tot_nhat = cau
+    for sentence, tokens in zip(cac_cau, tokenized):
+        overlap = tokens & query
+        direct = sum(weight(token) for token in overlap) / denominator
+        intent = min(1, len(tokens & expansion) / 2) if expansion else 0
+        # Ngữ cảnh chỉ hỗ trợ xếp hạng; không lấn át câu hỏi hiện tại.
+        context = len(tokens & previous) / len(previous) if previous else 0
+        phrase_bonus = 0.2 if any(
+            phrase in question.lower() and phrase in sentence.lower()
+            for phrase in intents
+        ) else 0
+        score = 0.7 * direct + 0.5 * intent + phrase_bonus
+        if overlap or intent:
+            score += 0.05 * context
+        if score > diem_cao_nhat:
+            diem_cao_nhat = score
+            cau_tot_nhat = sentence
 
     # Không đoán câu trả lời khi mức liên quan quá thấp.
     if not cau_tot_nhat or diem_cao_nhat < threshold:

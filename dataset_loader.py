@@ -10,7 +10,7 @@ def export_vicoqa(output_dir="data/vicoqa"):
     try:
         from datasets import load_dataset
     except ImportError as exc:
-        raise SystemExit("Hãy cài dependencies: pip install -r requirements.txt") from exc
+        raise SystemExit("Hãy cài dependency tùy chọn: pip install 'datasets>=3.0.0'") from exc
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     try:
