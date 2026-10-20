@@ -10,7 +10,45 @@ source .venv/bin/activate
 python chat.py
 ```
 
-Phần truy xuất, đánh giá và kiểm thử chỉ dùng thư viện chuẩn Python; không cần cài thêm gói, GPU, mô hình lớn hoặc API key.
+Phần truy xuất và đánh giá cũ cùng bộ kiểm thử mặc định chỉ dùng thư viện chuẩn Python; không cần cài thêm gói, GPU, mô hình lớn hoặc API key.
+
+## Phiên bản mô hình tự đọc tài liệu
+
+`read_document.py` dùng mô hình đọc hiểu trích xuất đã huấn luyện, **không dùng quy tắc từ khóa trong `rag_engine.py` và không viết sẵn đáp án**. Bạn dán văn bản hoặc đưa tệp `.txt`, nhập câu hỏi và mô hình tìm đoạn trả lời trong văn bản. Không cần API key hay server.
+
+Cài các gói tùy chọn trong môi trường Python (khuyến nghị Python 3.10–3.12):
+
+```bash
+python -m pip install -r requirements-reader.txt
+```
+
+Chạy rồi dán tài liệu; nhập `/xong` trên dòng riêng để chuyển sang hỏi đáp:
+
+```bash
+python read_document.py
+```
+
+Hoặc đọc tệp của bạn:
+
+```bash
+python read_document.py --document tai_lieu.txt
+```
+
+Hỏi một câu và xuất JSON gồm đáp án, bằng chứng, điểm mô hình và vị trí ký tự `start`/`end`:
+
+```bash
+python read_document.py --document tai_lieu.txt --question "Bệnh này do tác nhân nào gây ra?" --json
+```
+
+- Mặc định: `deepset/xlm-roberta-base-squad2`, một mô hình đọc hiểu dựa trên XLM-R đa ngôn ngữ, chạy CPU. Đây không phải mô hình đã fine-tune trên dữ liệu y tế tiếng Việt của dự án; cần đánh giá riêng chất lượng tiếng Việt.
+- Lần đầu cần Internet để tải trọng số từ Hugging Face, dung lượng lưu trữ và RAM cho mô hình. Sau khi đã tải, dùng `--local-only` để chạy từ cache. Đổi cache bằng biến `HF_HOME` nếu cần.
+- `--model TEN_HOAC_THU_MUC` chọn mô hình khác tương thích `AutoModelForQuestionAnswering` và có trọng số safetensors. Không chạy mã từ xa của mô hình.
+- `--device cuda` dùng GPU khi đã cài PyTorch hỗ trợ CUDA; mặc định không cần GPU.
+- Tài liệu dài được xử lý bằng cửa sổ token chồng lấp. Mỗi câu hỏi xử lý độc lập; hỏi đầy đủ đối tượng thay vì chỉ hỏi "nó là gì?".
+- `--threshold 0.05` là ngưỡng điểm mặc định; có thể chỉnh trong [0, 1]. Điểm chưa hiệu chỉnh nên không phải độ tin cậy y khoa. Khi mô hình không tìm được đáp án hoặc điểm thấp, chương trình từ chối trả lời.
+- Đây là **trích xuất đoạn trả lời**, không phải LLM tự viết giải thích dài; không đọc PDF/ảnh/URL trực tiếp. Bằng chứng và vị trí được đối chiếu với văn bản gốc.
+
+Trạng thái kiểm chứng: các kiểm thử mới dùng phản hồi mô hình kiểm soát để kiểm tra vị trí đáp án, từ chối trả lời, lỗi mô hình và dòng lệnh. **Chưa kiểm chứng suy luận mô hình thật**: môi trường hiện không kết nối được proxy tải Hugging Face và cài dependencies chưa thành công. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
 ## Dùng từ dòng lệnh
 
@@ -102,7 +140,8 @@ python dataset_loader.py --output data/vicoqa
 
 ## Cấu trúc chính
 
-- `chat.py`: hỏi đáp dòng lệnh, hỗ trợ tương tác và JSON.
+- `chat.py`: hỏi đáp dòng lệnh bằng từ khóa, hỗ trợ tương tác và JSON.
+- `read_document.py`, `reader_engine.py`: chế độ mô hình đọc hiểu; cài gói tùy chọn trong `requirements-reader.txt`.
 - `rag_engine.py`: chỉ mục tài liệu, chuẩn hóa Unicode và truy xuất bằng chứng.
 - `evaluate.py`: đánh giá EM, F1 và tính nhất quán hội thoại.
 - `tests/`: kiểm thử truy xuất, Unicode, lịch sử, dòng lệnh, dữ liệu lỗi và báo cáo.
