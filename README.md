@@ -48,7 +48,7 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 - `--threshold 0.05` là ngưỡng điểm mặc định; có thể chỉnh trong [0, 1]. Điểm chưa hiệu chỉnh nên không phải độ tin cậy y khoa. Khi mô hình không tìm được đáp án hoặc điểm thấp, chương trình từ chối trả lời.
 - Đây là **trích xuất đoạn trả lời**, không phải LLM tự viết giải thích dài; không đọc PDF/ảnh/URL trực tiếp. Bằng chứng và vị trí được đối chiếu với văn bản gốc.
 
-Trạng thái kiểm chứng: các kiểm thử mới dùng phản hồi mô hình kiểm soát để kiểm tra vị trí đáp án, từ chối trả lời, lỗi mô hình và dòng lệnh. **Chưa kiểm chứng suy luận mô hình thật**: môi trường hiện không kết nối được proxy tải Hugging Face và cài dependencies chưa thành công. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
+Trạng thái kiểm chứng: các kiểm thử mới dùng phản hồi mô hình kiểm soát để kiểm tra vị trí đáp án, từ chối trả lời, lỗi mô hình và dòng lệnh. **Chưa kiểm chứng suy luận mô hình thật**: đã cài và kiểm tra thư viện PyTorch/Transformers, nhưng tải từ huggingface.co vẫn bị proxy chặn HTTP 403. Cần cho phép huggingface.co trong thiết lập mạng; có thể cần thêm đích chuyển hướng tải trọng số khi được quan sát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
 ## Dùng từ dòng lệnh
 
