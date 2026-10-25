@@ -1,5 +1,6 @@
 """Đọc hiểu trích xuất bằng mô hình đã huấn luyện, không dùng luật từ khóa."""
 import math
+from pathlib import Path
 
 DEFAULT_MODEL = 'deepset/xlm-roberta-base-squad2'
 NO_ANSWER = 'Chưa tìm được câu trả lời đủ tin cậy trong tài liệu.'
@@ -21,12 +22,18 @@ class ReadingModel:
         except ImportError:
             raise ReaderError('Hãy cài gói đọc hiểu: python -m pip install -r requirements-reader.txt') from None
         try:
-            tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True, local_files_only=local_only,
+            source = model
+            if local_only and not Path(model).is_dir():
+                # Resolve the cache first so downstream pipeline helpers receive a
+                # filesystem path instead of attempting remote metadata requests.
+                from huggingface_hub import snapshot_download
+                source = snapshot_download(model, local_files_only=True)
+            tokenizer = AutoTokenizer.from_pretrained(source, use_fast=True, local_files_only=local_only,
                                                        trust_remote_code=False)
             if not tokenizer.is_fast:
                 raise ReaderError('Cần tokenizer fast để xác định đúng vị trí đáp án.')
             network = AutoModelForQuestionAnswering.from_pretrained(
-                model, local_files_only=local_only, trust_remote_code=False, use_safetensors=True)
+                source, local_files_only=local_only, trust_remote_code=False, use_safetensors=True)
             self._qa = pipeline('question-answering', model=network, tokenizer=tokenizer,
                                 device=0 if device == 'cuda' else -1)
         except ReaderError:
