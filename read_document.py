@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from reader_engine import DEFAULT_MODEL, ReaderError, ReadingModel
+from retriever_reader import RetrieverReader
 
 
 def main(argv=None):
@@ -17,7 +18,17 @@ def main(argv=None):
     parser.add_argument('--device', choices=('cpu', 'cuda'), default='cpu')
     parser.add_argument('--local-only', action='store_true', help='Chỉ dùng mô hình đã lưu trên máy.')
     parser.add_argument('--threshold', type=float, default=0.05, help='Ngưỡng điểm mô hình trong [0, 1].')
+    parser.add_argument('--mode', choices=('reader', 'retriever-reader'), default='reader',
+                        help='Đọc toàn tài liệu hoặc truy xuất trước rồi đọc (mặc định reader).')
+    parser.add_argument('--top-k', type=int, default=3, help='Số câu truy xuất trong chế độ retriever-reader.')
+    parser.add_argument('--retrieval-threshold', type=float, default=0.15)
+    parser.add_argument('--context-sentences', type=int, default=1,
+                        help='Số câu lân cận mỗi phía để giữ ngữ cảnh.')
     args = parser.parse_args(argv)
+    if args.top_k < 1 or args.context_sentences < 0:
+        parser.error('--top-k phải dương; --context-sentences phải không âm.')
+    if not math.isfinite(args.retrieval_threshold) or args.retrieval_threshold < 0:
+        parser.error('--retrieval-threshold phải là số hữu hạn không âm.')
     if args.json and args.question is None:
         parser.error('--json cần đi kèm --question.')
     if not math.isfinite(args.threshold) or not 0 <= args.threshold <= 1:
@@ -41,11 +52,21 @@ def main(argv=None):
             document = '\n'.join(lines)
         if not document.strip():
             parser.error('Tài liệu rỗng.')
-        print('Đang tải mô hình đọc hiểu…', file=sys.stderr)
-        reader = ReadingModel(args.model, device=args.device, local_only=args.local_only)
+        if args.mode == 'retriever-reader':
+            reader = RetrieverReader(document, model=args.model, device=args.device,
+                                     local_only=args.local_only, top_k=args.top_k,
+                                     retrieval_threshold=args.retrieval_threshold,
+                                     context_sentences=args.context_sentences)
+            print('Đã lập chỉ mục. Mô hình sẽ tải khi tìm được đoạn liên quan.', file=sys.stderr)
+        else:
+            print('Đang tải mô hình đọc hiểu…', file=sys.stderr)
+            reader = ReadingModel(args.model, device=args.device, local_only=args.local_only)
 
         def ask(question):
-            result = reader.answer(document, question, threshold=args.threshold)
+            if args.mode == 'retriever-reader':
+                result = reader.answer(question, threshold=args.threshold)
+            else:
+                result = reader.answer(document, question, threshold=args.threshold)
             if args.json:
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             else:

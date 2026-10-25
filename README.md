@@ -50,6 +50,41 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 
 Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 22 ca vẫn đạt; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
+## Retriever–reader: truy xuất trước, mô hình đọc sau
+
+Hai bước đã được nối trong `retriever_reader.py`. Chạy:
+
+```bash
+python read_document.py --mode retriever-reader --document tai_lieu.txt
+```
+
+Hỏi một câu và xem cả đoạn truy xuất, ngữ cảnh thực sự được đọc và vị trí đáp án:
+
+```bash
+python read_document.py --mode retriever-reader --document tai_lieu.txt \
+  --question "Sốt xuất huyết do virus nào gây ra?" --top-k 3 --json
+```
+
+Sau khi đã tải mô hình, thêm `--local-only` để chạy ngoại tuyến.
+
+Luồng xử lý:
+
+```text
+Tài liệu → chỉ mục từ khóa/IDF → top-k câu liên quan
+         → thêm câu lân cận, gộp cửa sổ trùng → mô hình đọc hiểu → đáp án + nguồn
+```
+
+- `--top-k`: số câu được retriever chọn (mặc định 3).
+- `--retrieval-threshold`: ngưỡng từ khóa/IDF (mặc định 0.15).
+- `--context-sentences`: số câu lân cận mỗi phía (mặc định 1); đặt 0 nếu chỉ muốn đọc đúng các câu được chọn.
+- `--threshold`: ngưỡng điểm mô hình đọc hiểu (mặc định 0.05), độc lập với điểm truy xuất.
+- Nếu không truy xuất được câu nào, không tải/gọi mô hình và không tự quay lại đọc toàn tài liệu. Nếu có bằng chứng nhưng reader không tìm được đáp án, trả lời từ chối riêng.
+- JSON có `passages` (xếp hạng retriever), `contexts` (văn bản reader thực sự nhận), `reason` và `start`/`end` tính trên **tài liệu gốc**, kể cả văn bản Unicode dạng tách dấu.
+- Nếu nhiều ngữ cảnh trả lời được, chọn đáp án có điểm reader cao nhất; điểm giữa các đoạn chưa được hiệu chỉnh. Không cộng hai loại điểm với nhau.
+- Mỗi câu hỏi độc lập; hãy hỏi đầy đủ đối tượng. Retriever hiện là từ khóa/IDF, chưa có embedding, vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không phải RAG sinh văn bản.
+
+Tài liệu ngắn hoặc `top-k` lớn có thể khiến cửa sổ bao phủ gần hết tài liệu; không đảm bảo luôn nhanh hơn đọc toàn văn. Retriever có thể bỏ sót đoạn chứa đáp án. Các kiểm thử kiểm tra ánh xạ vị trí, Unicode, gộp ngữ cảnh, từ chối và tái sử dụng mô hình; cần đánh giá dữ liệu thật để đo chất lượng toàn hệ thống.
+
 ## Dùng từ dòng lệnh
 
 Hỏi đáp tương tác trên tài liệu mẫu:
@@ -141,6 +176,7 @@ python dataset_loader.py --output data/vicoqa
 ## Cấu trúc chính
 
 - `chat.py`: hỏi đáp dòng lệnh bằng từ khóa, hỗ trợ tương tác và JSON.
+- `retriever_reader.py`: nối truy xuất với mô hình đọc hiểu, ánh xạ đáp án về văn bản gốc.
 - `read_document.py`, `reader_engine.py`: chế độ mô hình đọc hiểu; cài gói tùy chọn trong `requirements-reader.txt`.
 - `rag_engine.py`: chỉ mục tài liệu, chuẩn hóa Unicode và truy xuất bằng chứng.
 - `evaluate.py`: đánh giá EM, F1 và tính nhất quán hội thoại.
