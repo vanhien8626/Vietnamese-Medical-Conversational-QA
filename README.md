@@ -50,6 +50,26 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 
 Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 22 ca vẫn đạt; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
+## Dùng ngay văn bản dài về sốt xuất huyết
+
+Văn bản đã trao đổi trong hướng dẫn được lưu đầy đủ tại `data/dengue_document.txt`. Dòng điều khiển `/xong` không nằm trong tệp vì khi đọc tệp không cần dán tương tác.
+
+Trong Terminal Antigravity, từ thư mục dự án đã cài `requirements-reader.txt`, chạy:
+
+```powershell
+.\.venv\Scripts\python.exe read_document.py --mode retriever-reader --sample
+```
+
+Chương trình tự đọc tài liệu mẫu và chờ bạn đặt câu hỏi; không phải dán lại văn bản. Tham số `--sample` xác định tệp theo vị trí chương trình, không phụ thuộc thư mục làm việc. Không dùng cùng `--document`.
+
+Hoặc hỏi một câu:
+
+```bash
+python read_document.py --mode retriever-reader --sample --question "Sốt xuất huyết do virus nào gây ra?"
+```
+
+Thử tiếp: "Muỗi Aedes thường hoạt động vào thời điểm nào?", "Thời gian ủ bệnh thường khoảng bao lâu?", "Kháng sinh có điều trị được virus Dengue không?". Nhập `/thoat` để kết thúc. Đây là tài liệu minh họa để kiểm tra đọc hiểu, không phải dữ liệu huấn luyện hoặc tài liệu điều trị chính thức.
+
 ## Retriever–reader: truy xuất trước, mô hình đọc sau
 
 Hai bước đã được nối trong `retriever_reader.py`. Chạy:

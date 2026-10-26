@@ -11,7 +11,9 @@ from retriever_reader import RetrieverReader
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Mô hình tự tìm đoạn đáp án trong tài liệu bạn nhập.')
-    parser.add_argument('--document', type=Path, help='Đường dẫn tệp văn bản UTF-8.')
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument('--document', type=Path, help='Đường dẫn tệp văn bản UTF-8.')
+    source.add_argument('--sample', action='store_true', help='Dùng văn bản dài mẫu về sốt xuất huyết đi kèm dự án.')
     parser.add_argument('--question', help='Hỏi một câu rồi thoát; nếu bỏ trống sẽ chat tương tác.')
     parser.add_argument('--json', action='store_true', help='Xuất JSON khi dùng --question.')
     parser.add_argument('--model', default=DEFAULT_MODEL, help='Tên trên Hugging Face hoặc thư mục mô hình.')
@@ -36,7 +38,9 @@ def main(argv=None):
     if args.question is not None and not args.question.strip():
         parser.error('Câu hỏi không được để trống.')
     try:
-        if args.document:
+        if args.sample:
+            document = (Path(__file__).resolve().parent / 'data/dengue_document.txt').read_text(encoding='utf-8')
+        elif args.document:
             document = args.document.read_text(encoding='utf-8-sig')
         else:
             print('Dán tài liệu, nhập /xong trên một dòng riêng để kết thúc:', file=sys.stderr)
