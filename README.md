@@ -50,6 +50,37 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 
 Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 22 ca vẫn đạt; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
+## Đọc toàn bộ tài liệu thành tiếng Việt
+
+Trên Windows/Antigravity, cài gói giọng đọc riêng (không cần cài mô hình nếu chỉ nghe tài liệu):
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-speech.txt
+```
+
+Chỉ đọc toàn văn mẫu qua loa rồi kết thúc:
+
+```powershell
+.\.venv\Scripts\python.exe read_document.py --sample --audio-only
+```
+
+Đọc toàn bộ tài liệu trước, sau đó chuyển sang hỏi đáp:
+
+```powershell
+.\.venv\Scripts\python.exe read_document.py --sample --mode retriever-reader --read-aloud
+```
+
+Cần cài cả `requirements-reader.txt` cho phần hỏi đáp. Chương trình đợi phát xong MP3 mới nhận câu hỏi. Ctrl+C dừng đọc và thoát chương trình.
+
+- Mặc định giọng nữ `vi-VN-HoaiMyNeural`; thêm `--voice vi-VN-NamMinhNeural` để dùng giọng nam.
+- `--speech-rate -20` đọc chậm hơn 20%; giới hạn -50 đến 100.
+- Dùng `--document tai_lieu.txt` thay `--sample` để đọc tài liệu của bạn.
+- MP3 mặc định được lưu với tên mới trong `audio_output/`. Thêm `--audio-output dengue.mp3` để chọn đường dẫn; không ghi đè tệp có sẵn.
+- Thêm `--no-play` để chỉ tạo MP3, rồi mở bằng trình phát âm thanh. Tự phát loa bằng mã hiện hỗ trợ Windows; macOS/Linux dùng cách lưu MP3 này.
+- Giọng đọc dùng dịch vụ Microsoft Edge TTS qua Internet, không cần API key; toàn bộ văn bản được gửi đến dịch vụ để tạo âm thanh. `--local-only` chỉ áp dụng mô hình hỏi đáp, không làm giọng đọc chạy ngoại tuyến.
+
+Kiểm chứng: đã kiểm thử đầy đủ việc chuyển nguyên văn, thứ tự đọc trước khi hỏi đáp, lưu tệp và xử lý lỗi bằng phản hồi kiểm soát. Máy cloud hiện chặn dịch vụ `speech.platform.bing.com`, nên chưa tạo được MP3 thật và chưa kiểm chứng phát loa trên Windows. Nếu báo lỗi mạng, kiểm tra kết nối dịch vụ TTS; không tắt kiểm tra TLS.
+
 ## Dùng ngay văn bản dài về sốt xuất huyết
 
 Văn bản đã trao đổi trong hướng dẫn được lưu đầy đủ tại `data/dengue_document.txt`. Dòng điều khiển `/xong` không nằm trong tệp vì khi đọc tệp không cần dán tương tác.

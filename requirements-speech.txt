@@ -1,0 +1,2 @@
+# Optional online Vietnamese text-to-speech; independent of model dependencies.
+edge-tts>=7,<8
