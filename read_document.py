@@ -7,6 +7,8 @@ from pathlib import Path
 
 from reader_engine import DEFAULT_MODEL, ReaderError, ReadingModel
 from hybrid_retriever import DEFAULT_SEMANTIC_MODEL, SemanticEncoderError
+from medical_safety import safety_refusal
+from rag_generator import GenerationError, OllamaGenerator
 from retriever_reader import RetrieverReader
 from speech import SpeechError, create_audio, play_audio
 import uuid
@@ -26,6 +28,8 @@ def main(argv=None):
     parser.add_argument('--local-only', action='store_true', help='Chỉ dùng mô hình đã lưu trên máy.')
     parser.add_argument('--threshold', type=float, default=0.20,
                         help='Ngưỡng điểm mô hình trong [0, 1] (mặc định 0.20).')
+    parser.add_argument('--no-answer-margin', type=float, default=0.0,
+                        help='Chênh lệch tối thiểu so với không-đáp-án (mặc định 0).')
     parser.add_argument('--mode', choices=('reader', 'retriever-reader'), default='reader',
                         help='Đọc toàn tài liệu hoặc truy xuất trước rồi đọc (mặc định reader).')
     parser.add_argument('--top-k', type=int, default=3, help='Số câu truy xuất trong chế độ retriever-reader.')
@@ -36,8 +40,18 @@ def main(argv=None):
                         help='Mô hình Sentence-BERT dùng khi --retriever hybrid.')
     parser.add_argument('--semantic-weight', type=float, default=0.35,
                         help='Trọng số ngữ nghĩa trong [0, 1] (mặc định 0.35).')
+    parser.add_argument('--semantic-candidates', type=int, default=5,
+                        help='Số ứng viên BM25 trên mỗi kết quả hybrid (mặc định 5).')
     parser.add_argument('--context-sentences', type=int, default=1,
                         help='Số câu lân cận mỗi phía để giữ ngữ cảnh.')
+    parser.add_argument('--history-mode', choices=('rewrite', 'concat'), default='rewrite',
+                        help='Viết lại tham chiếu hoặc nối lịch sử vào Reader.')
+    parser.add_argument('--history-turns', type=int, default=5,
+                        help='Số lượt gần nhất dùng trong hội thoại (mặc định 5).')
+    parser.add_argument('--generate', action='store_true',
+                        help='Dùng Ollama viết lại đáp án từ các nguồn đã truy xuất.')
+    parser.add_argument('--ollama-url', default='http://127.0.0.1:11434')
+    parser.add_argument('--ollama-model', default='qwen2.5:3b')
     parser.add_argument('--read-aloud', action='store_true', help='Đọc toàn bộ tài liệu thành tiếng trước khi hỏi đáp (Windows).')
     parser.add_argument('--audio-only', action='store_true', help='Chỉ đọc tài liệu, không tải mô hình hỏi đáp.')
     parser.add_argument('--audio-output', type=Path, help='Lưu MP3 vào đường dẫn này, không ghi đè.')
@@ -53,14 +67,20 @@ def main(argv=None):
         parser.error('--audio-output/--no-play cần --read-aloud hoặc --audio-only.')
     if args.top_k < 1 or args.context_sentences < 0:
         parser.error('--top-k phải dương; --context-sentences phải không âm.')
+    if not 0 <= args.history_turns <= 10:
+        parser.error('--history-turns phải từ 0 đến 10.')
     if not math.isfinite(args.retrieval_threshold) or args.retrieval_threshold < 0:
         parser.error('--retrieval-threshold phải là số hữu hạn không âm.')
     if not math.isfinite(args.semantic_weight) or not 0 <= args.semantic_weight <= 1:
         parser.error('--semantic-weight phải nằm trong [0, 1].')
+    if args.semantic_candidates < 1:
+        parser.error('--semantic-candidates phải là số nguyên dương.')
     if args.json and args.question is None:
         parser.error('--json cần đi kèm --question.')
     if not math.isfinite(args.threshold) or not 0 <= args.threshold <= 1:
         parser.error('--threshold phải nằm trong [0, 1].')
+    if not math.isfinite(args.no_answer_margin) or args.no_answer_margin < 0:
+        parser.error('--no-answer-margin phải là số hữu hạn không âm.')
     if args.question is not None and not args.question.strip():
         parser.error('Câu hỏi không được để trống.')
     try:
@@ -99,31 +119,74 @@ def main(argv=None):
                                      context_sentences=args.context_sentences,
                                      retriever=args.retriever,
                                      semantic_model=args.semantic_model,
-                                     semantic_weight=args.semantic_weight)
+                                     semantic_weight=args.semantic_weight,
+                                     semantic_candidate_multiplier=args.semantic_candidates,
+                                     no_answer_margin=args.no_answer_margin)
             print('Đã lập chỉ mục. Mô hình sẽ tải khi tìm được đoạn liên quan.', file=sys.stderr)
         else:
-            print('Đang tải mô hình đọc hiểu…', file=sys.stderr)
-            reader = ReadingModel(args.model, device=args.device, local_only=args.local_only)
+            reader = None
+            print('Mô hình đọc hiểu sẽ tải khi có câu hỏi được chấp nhận.', file=sys.stderr)
 
-        memory = ConversationMemory(max_turns=5)
+        memory = ConversationMemory(max_turns=max(1, args.history_turns or 1))
+        generator = (OllamaGenerator(args.ollama_model, args.ollama_url)
+                     if args.generate else None)
 
         def ask(question, *, use_memory=False):
-            resolved_question, used_context = memory.resolve(question) if use_memory else (question, False)
-            if args.mode == 'retriever-reader':
-                result = reader.answer(resolved_question, threshold=args.threshold)
+            nonlocal reader
+            result = safety_refusal(question)
+            used_context = False
+            resolved_question = question
+            reader_question = question
+            if result is None:
+                resolved_question, used_context = memory.resolve(question) if use_memory else (question, False)
+                reader_question = resolved_question
+                if use_memory and args.history_mode == 'concat':
+                    reader_question = memory.contextualize(
+                        resolved_question, max_history=args.history_turns)
+                if args.mode == 'retriever-reader':
+                    result = reader.answer(
+                        resolved_question,
+                        threshold=args.threshold,
+                        reader_question=reader_question,
+                    )
+                else:
+                    if reader is None:
+                        print('Đang tải mô hình đọc hiểu…', file=sys.stderr)
+                        reader = ReadingModel(
+                            args.model,
+                            device=args.device,
+                            local_only=args.local_only,
+                            no_answer_margin=args.no_answer_margin,
+                        )
+                    result = reader.answer(
+                        document, reader_question, threshold=args.threshold)
+                if generator is not None and result['sources']:
+                    extractive_answer = result['answer']
+                    generated_answer = generator.generate(
+                        resolved_question, result['sources'], extractive_answer)
+                    result = {**result, 'answer': generated_answer,
+                              'extractive_answer': extractive_answer,
+                              'generated': True, 'generator_model': generator.model}
             else:
-                result = reader.answer(document, resolved_question, threshold=args.threshold)
+                print('Yêu cầu tư vấn cá nhân đã được từ chối.', file=sys.stderr)
             if use_memory:
                 memory.record(question, resolved_question, result['answer'])
             if used_context:
                 result = {**result, 'original_question': question,
                           'resolved_question': resolved_question, 'used_history': True}
+            if use_memory and args.history_mode == 'concat':
+                result = {**result, 'reader_question': reader_question,
+                          'history_mode': 'concat'}
             if args.json:
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             else:
                 if used_context:
                     print('Hiểu theo ngữ cảnh:', resolved_question)
+                if use_memory and args.history_mode == 'concat' and memory.turns:
+                    print(f'Đã nối {min(len(memory.turns), args.history_turns)} lượt trước vào Reader.')
                 print('Trả lời:', result['answer'])
+                if result.get('generated'):
+                    print('Đáp án trích xuất trước khi viết lại:', result['extractive_answer'])
                 for number, source in enumerate(result['sources'], 1):
                     label = 'Đoạn văn gốc dùng để trả lời'
                     if len(result['sources']) > 1:
@@ -167,7 +230,7 @@ def main(argv=None):
     except KeyboardInterrupt:
         print('\nĐã dừng.', file=sys.stderr)
         return 130
-    except (OSError, UnicodeError, ReaderError, SemanticEncoderError,
+    except (OSError, UnicodeError, ReaderError, SemanticEncoderError, GenerationError,
             SpeechError, ValueError) as exc:
         print(f'Lỗi: {exc}', file=sys.stderr)
         return 1

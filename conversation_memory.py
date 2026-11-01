@@ -90,6 +90,19 @@ class ConversationMemory:
         })
         self.turns = self.turns[-self.max_turns:]
 
+    def contextualize(self, question, max_history=None):
+        """Nối các lượt gần nhất theo cùng định dạng dùng khi fine-tune."""
+        limit = self.max_turns if max_history is None else max_history
+        if type(limit) is not int or limit < 0:
+            raise ValueError('max_history phải là số nguyên không âm.')
+        turns = self.turns[-limit:] if limit else []
+        parts = [
+            f"Câu hỏi trước: {turn['question']} Trả lời trước: {turn['answer']}"
+            for turn in turns
+        ]
+        parts.append(f'Câu hỏi hiện tại: {_clean(question)}')
+        return ' '.join(parts)
+
     def clear(self):
         self.turns.clear()
         self.topic = None

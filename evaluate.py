@@ -54,6 +54,8 @@ def validate_dataset(data):
             if not isinstance(turn, dict) or not isinstance(turn.get('question'), str) or not turn['question'].strip():
                 raise ValueError(f'{location}, lượt {j + 1}: question phải là chuỗi không rỗng.')
             gold = turn.get('answer')
+            if 'unanswerable' in turn and type(turn['unanswerable']) is not bool:
+                raise ValueError(f'{location}, lượt {j + 1}: unanswerable phải là boolean.')
             answers = gold if isinstance(gold, list) else [gold]
             if not answers or any(not isinstance(text, str) or not text.strip() for text in answers):
                 raise ValueError(f'{location}, lượt {j + 1}: answer phải là chuỗi hoặc danh sách chuỗi không rỗng.')
@@ -70,6 +72,7 @@ def evaluate_dataset(data):
         scores = []
         for j, turn in enumerate(conversation['turns']):
             result = index.answer(turn['question'], history)
+            answerable = not turn.get('unanswerable', False)
             gold = turn['answer'] if isinstance(turn['answer'], list) else [turn['answer']]
             em = max(exact_match(result['answer'], answer) for answer in gold)
             f1 = max(f1_score(result['answer'], answer) for answer in gold)
@@ -78,6 +81,7 @@ def evaluate_dataset(data):
                 'conversation_index': i, 'turn_index': j,
                 'question': turn['question'], 'expected': turn['answer'],
                 'prediction': result['answer'], 'sources': result['sources'],
+                'answerable': answerable,
                 'retrieval_score': result['score'], 'exact_match': em, 'f1': f1,
             })
             history.append({'question': turn['question'], 'answer': result['answer']})
@@ -87,12 +91,26 @@ def evaluate_dataset(data):
             'conversation_index': i, 'questions': len(scores),
             'f1': sum(scores) / len(scores), 'consistent': is_consistent,
         })
+    answerable_rows = [row for row in predictions if row['answerable']]
+    unanswerable_rows = [row for row in predictions if not row['answerable']]
+    correct_refusals = sum(not row['sources'] for row in unanswerable_rows)
+    unsafe_answers = sum(bool(row['sources']) for row in unanswerable_rows)
+    false_refusals = sum(not row['sources'] for row in answerable_rows)
     return {
         'conversations': len(data), 'questions': len(predictions),
         'exact_match': sum(row['exact_match'] for row in predictions) / len(predictions),
         'f1': sum(row['f1'] for row in predictions) / len(predictions),
         'conversation_consistency': consistent / len(data),
         'unanswered': sum(not row['sources'] for row in predictions),
+        'correct_refusals': correct_refusals,
+        'unsafe_answers': unsafe_answers,
+        'false_refusals': false_refusals,
+        'correct_refusal_rate': (
+            correct_refusals / len(unanswerable_rows) if unanswerable_rows else None),
+        'unsafe_answer_rate': (
+            unsafe_answers / len(unanswerable_rows) if unanswerable_rows else None),
+        'false_refusal_rate': (
+            false_refusals / len(answerable_rows) if answerable_rows else None),
         'conversation_reports': conversation_reports,
         'predictions': predictions,
     }
@@ -126,6 +144,11 @@ def main(argv=None):
     print(f"Exact Match: {report['exact_match']:.2%}")
     print(f"F1 Score: {report['f1']:.2%}")
     print(f"Conversation Consistency: {report['conversation_consistency']:.2%}")
+    if report['correct_refusal_rate'] is not None:
+        print(f"Từ chối đúng: {report['correct_refusal_rate']:.2%}")
+        print(f"Trả lời bừa: {report['unsafe_answer_rate']:.2%}")
+    if report['false_refusal_rate'] is not None:
+        print(f"Từ chối nhầm: {report['false_refusal_rate']:.2%}")
     return 0
 
 

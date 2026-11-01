@@ -49,6 +49,35 @@ class ReaderTests(unittest.TestCase):
             self.assertEqual(result['sources'], [])
             self.assertIsNone(result['start'])
 
+    def test_no_answer_margin_can_reject_nonempty_candidate(self):
+        start = DOCUMENT.index('nghỉ ngơi')
+        reader = controlled_reader([
+            {'answer': 'nghỉ ngơi', 'score': 0.55, 'start': start,
+             'end': start + len('nghỉ ngơi')},
+            {'answer': '', 'score': 0.50, 'start': 0, 'end': 0},
+        ])
+        reader.no_answer_margin = 0.10
+
+        result = reader.answer(DOCUMENT, 'Người bệnh nên làm gì?', threshold=0.2)
+
+        self.assertEqual(result['answer'], NO_ANSWER)
+        self.assertAlmostEqual(result['score_margin'], 0.05)
+
+    def test_no_answer_margin_metadata_is_returned(self):
+        start = DOCUMENT.index('nghỉ ngơi')
+        reader = controlled_reader([
+            {'answer': 'nghỉ ngơi', 'score': 0.8, 'start': start,
+             'end': start + len('nghỉ ngơi')},
+            {'answer': '', 'score': 0.1, 'start': 0, 'end': 0},
+        ])
+        reader.no_answer_margin = 0.2
+
+        result = reader.answer(DOCUMENT, 'Người bệnh nên làm gì?')
+
+        self.assertEqual(result['answer'], 'nghỉ ngơi')
+        self.assertEqual(result['no_answer_score'], 0.1)
+        self.assertAlmostEqual(result['score_margin'], 0.7)
+
     def test_invalid_model_offsets_and_scores_are_rejected(self):
         for output in ({'answer': 'bịa', 'score': 0.8, 'start': 0, 'end': 3},
                        {'answer': 'x', 'score': float('nan')},

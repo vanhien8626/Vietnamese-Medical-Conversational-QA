@@ -46,14 +46,19 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 - `--device cuda` dùng GPU khi đã cài PyTorch hỗ trợ CUDA; mặc định không cần GPU.
 - Tài liệu dài được xử lý bằng cửa sổ token chồng lấp. Mỗi câu hỏi xử lý độc lập; hỏi đầy đủ đối tượng thay vì chỉ hỏi "nó là gì?".
 - `--threshold 0.20` là ngưỡng điểm mặc định; có thể chỉnh trong [0, 1]. Điểm chưa hiệu chỉnh nên không phải độ tin cậy y khoa. Khi mô hình không tìm được đáp án hoặc điểm thấp, chương trình từ chối trả lời. Ngưỡng này được nâng từ 0.05 sau khi kiểm tra cho thấy mô hình có thể chọn sai một span với điểm rất thấp.
+- `--no-answer-margin 0.05` có thể yêu cầu điểm span phải cao hơn ứng viên
+  không-đáp-án ít nhất 0.05. Giá trị mặc định 0 giữ tương thích; cần hiệu chỉnh
+  ngưỡng trên tập validation của đúng checkpoint trước khi dùng thực tế.
 - Đây là **trích xuất đoạn trả lời**, không phải LLM tự viết giải thích dài; không đọc PDF/ảnh/URL trực tiếp. Bằng chứng và vị trí được đối chiếu với văn bản gốc.
+- Câu hỏi xin chẩn đoán, kê đơn hoặc tính liều cho một cá nhân được từ chối
+  trước khi tải mô hình; câu hỏi kiến thức chung về tài liệu vẫn được xử lý.
 - Khi chạy ở dạng văn bản, chương trình ghi rõ `Đoạn văn gốc dùng để trả lời`;
   phần này được trích nguyên văn từ tài liệu, không phải bản tóm tắt do mô hình tạo.
 - Với câu hỏi yêu cầu danh sách triệu chứng hoặc dấu hiệu, nếu span của mô hình nằm
   trong một câu liệt kê rõ bằng `gồm` hoặc `bao gồm`, chương trình mở rộng đáp án
   thành nguyên câu trong tài liệu để tránh chỉ hiển thị mục đầu tiên.
 
-Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 52 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất BM25 trên tập mẫu, không phải đánh giá độc lập của mô hình neural.
+Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 63 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất BM25 trên tập mẫu, không phải đánh giá độc lập của mô hình neural.
 
 ## Đọc toàn bộ tài liệu thành tiếng Việt
 
@@ -110,6 +115,12 @@ trình sẽ thay tham chiếu bằng chủ đề trước rồi mới truy xuấ
 kết thúc. Đây là bộ nhớ quy tắc ngắn, không phải khả năng hiểu hội thoại tổng quát;
 nếu cách viết lại chưa đúng, hãy hỏi lại bằng câu đầy đủ.
 
+Mặc định `--history-mode rewrite` chỉ viết lại tham chiếu. Chế độ
+`--history-mode concat --history-turns 5` còn nối các cặp hỏi–đáp trước vào
+đầu vào Reader, đúng định dạng mà `train_reader.py` dùng khi fine-tune. Chỉ
+nên dùng chế độ nối với checkpoint đã được huấn luyện cùng định dạng; Retriever
+vẫn tìm kiếm bằng câu hỏi đã viết lại, không bằng chuỗi lịch sử dài.
+
 Hoặc hỏi một câu:
 
 ```bash
@@ -146,7 +157,9 @@ Tài liệu → chỉ mục BM25 → top-k câu liên quan
 - `--retriever bm25`: truy xuất nhẹ, không cần mô hình embedding.
 - `--retriever hybrid`: kết hợp BM25 và Sentence-BERT; cài
   `requirements-hybrid.txt`. Dùng `--semantic-weight` để chỉnh tỉ trọng ngữ
-  nghĩa và `--semantic-model` để chọn mô hình embedding.
+  nghĩa, `--semantic-candidates` để chọn số ứng viên BM25 và
+  `--semantic-model` để chọn mô hình embedding. BM25 chọn ứng viên trước;
+  Sentence-BERT chỉ xếp hạng lại tập ứng viên này.
 
 Cài và chạy hybrid:
 
@@ -174,9 +187,25 @@ cho chế độ hybrid. Không xem kết quả BM25 100% bên dưới là kết 
 - Nếu nhiều ngữ cảnh trả lời được, chọn đáp án có điểm reader cao nhất; điểm giữa các đoạn chưa được hiệu chỉnh. Không cộng hai loại điểm với nhau.
 - Câu hỏi tương tác có thể dùng tối đa 5 lượt lịch sử để giải quyết một số tham
   chiếu rõ ràng. Câu hỏi `--question` chạy một lần vẫn độc lập. Retriever mặc
-  định là BM25; chế độ hybrid bổ sung embedding Sentence-BERT nhưng chưa dùng
-  vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không
-  phải RAG sinh văn bản.
+  định là BM25; chế độ hybrid bổ sung embedding Sentence-BERT. Chế độ mặc định
+  vẫn là retriever–reader trích xuất. Có thể bật lớp sinh tùy chọn bên dưới.
+
+### RAG sinh câu trả lời bằng Ollama (tùy chọn)
+
+Sau khi cài [Ollama](https://ollama.com/) và tải một mô hình cục bộ, ví dụ
+`ollama pull qwen2.5:3b`, chạy:
+
+```bash
+python read_document.py --sample --mode retriever-reader \
+  --generate --ollama-model qwen2.5:3b
+```
+
+Retriever và reader vẫn chọn bằng chứng trước. Ollama chỉ viết lại câu trả lời
+từ các `sources` đã chọn, với nhiệt độ 0; JSON giữ cả `answer` đã sinh và
+`extractive_answer`. Nếu không có nguồn đủ tin cậy, chương trình không gọi
+Ollama. `--ollama-url` đổi địa chỉ dịch vụ, mặc định là
+`http://127.0.0.1:11434`. Lớp sinh có thể diễn đạt sai dù prompt đã giới hạn,
+vì vậy luôn kiểm tra các đoạn nguồn hiển thị kèm theo.
 
 Tài liệu ngắn hoặc `top-k` lớn có thể khiến cửa sổ bao phủ gần hết tài liệu; không đảm bảo luôn nhanh hơn đọc toàn văn. Retriever có thể bỏ sót đoạn chứa đáp án. Các kiểm thử kiểm tra ánh xạ vị trí, Unicode, gộp ngữ cảnh, từ chối và tái sử dụng mô hình; cần đánh giá dữ liệu thật để đo chất lượng toàn hệ thống.
 
@@ -262,6 +291,13 @@ python evaluate.py --data data/sample_dataset.json --output report.json
 
 Tệp đầu vào phải là danh sách hội thoại có `context` và danh sách `turns`; mỗi lượt có `question` là chuỗi không rỗng. `answer` chấp nhận một chuỗi hoặc danh sách các đáp án chuẩn không rỗng; EM và F1 lấy điểm tốt nhất trên các đáp án này. Dataset rỗng hoặc sai cấu trúc sẽ báo lỗi. Báo cáo gồm EM/F1, tính nhất quán, số hội thoại/câu hỏi, số lượt không tìm được bằng chứng (`unanswered`), F1 từng hội thoại và từng dự đoán; lệnh từ chối ghi đè tệp có sẵn. Đường dẫn dữ liệu mẫu mặc định không phụ thuộc thư mục đang chạy.
 
+Đặt `"unanswerable": true` cho câu cố ý không có đáp án để đo tỷ lệ từ chối
+đúng, trả lời bừa và từ chối nhầm. Có thể chạy nhanh tập minh họa:
+
+```bash
+python evaluate.py --data data/refusal_dataset.json
+```
+
 Trên dữ liệu mẫu gồm 5 hội thoại / 32 câu hỏi: EM, F1 và conversation consistency đều đạt 100%. Tập mẫu nhỏ, được biên soạn theo đúng cấu trúc truy xuất, chưa chứng minh chất lượng trên dữ liệu thực tế. Điểm truy xuất là điểm xếp hạng, không phải xác suất đúng.
 
 ## Dữ liệu UIT-ViCoQA (tùy chọn)
@@ -310,10 +346,11 @@ không phải phép đo chất lượng hoặc bằng chứng mô hình đã đ�
 - `chat.py`: hỏi đáp dòng lệnh bằng từ khóa, hỗ trợ tương tác và JSON.
 - `retriever_reader.py`: nối truy xuất với mô hình đọc hiểu, ánh xạ đáp án về văn bản gốc.
 - `hybrid_retriever.py`: kết hợp BM25 với Sentence-BERT khi bật chế độ hybrid.
+- `rag_generator.py`: viết lại đáp án có nguồn qua máy chủ Ollama cục bộ.
 - `read_document.py`, `reader_engine.py`: chế độ mô hình đọc hiểu; cài gói tùy chọn trong `requirements-reader.txt`.
 - `rag_engine.py`: chỉ mục BM25, chuẩn hóa Unicode và truy xuất bằng chứng.
 - `train_reader.py`: fine-tune mô hình QA với nhãn start/end và lịch sử hội thoại.
-- `evaluate.py`: đánh giá EM, F1 và tính nhất quán hội thoại.
+- `evaluate.py`: đánh giá EM, F1, tính nhất quán và độ an toàn khi từ chối.
 - `tests/`: kiểm thử truy xuất, Unicode, lịch sử, dòng lệnh, dữ liệu lỗi và báo cáo.
 
 Prototype phục vụ học tập, không thay thế tư vấn hoặc chẩn đoán của bác sĩ.

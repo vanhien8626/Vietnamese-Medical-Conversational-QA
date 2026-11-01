@@ -60,27 +60,30 @@ def _cosine(left, right):
 
 
 class HybridDocumentIndex:
-    """BM25 lấy tín hiệu từ khóa, Sentence-BERT bổ sung tín hiệu ngữ nghĩa."""
+    """BM25 chọn ứng viên, Sentence-BERT xếp hạng lại theo ngữ nghĩa."""
 
     def __init__(self, document, *, semantic_model=DEFAULT_SEMANTIC_MODEL,
-                 semantic_weight=0.35, device='cpu', local_only=False, encoder=None):
+                 semantic_weight=0.35, candidate_multiplier=5,
+                 device='cpu', local_only=False, encoder=None):
         if not math.isfinite(semantic_weight) or not 0 <= semantic_weight <= 1:
             raise ValueError('semantic_weight phải nằm trong [0, 1].')
+        if type(candidate_multiplier) is not int or candidate_multiplier < 1:
+            raise ValueError('candidate_multiplier phải là số nguyên dương.')
         self.lexical = DocumentIndex(document)
         self.document = self.lexical.document
         self.sentences = self.lexical.sentences
         self.semantic_weight = semantic_weight
+        self.candidate_multiplier = candidate_multiplier
         self.encoder = encoder or SentenceTransformerEncoder(
             semantic_model, device=device, local_only=local_only)
         self.model = getattr(self.encoder, 'model_name', semantic_model)
         self._content_positions = [
-            i for i, sentence in enumerate(self.sentences)
-            if not _is_non_content(sentence)
-        ]
-        content = [self.sentences[i] for i in self._content_positions]
-        self._vectors = self.encoder.encode(content) if content else []
-        if len(self._vectors) != len(content):
+            i for i, sentence in enumerate(self.sentences) if not _is_non_content(sentence)]
+        content = [self.sentences[position] for position in self._content_positions]
+        vectors = self.encoder.encode(content) if content else []
+        if len(vectors) != len(content):
             raise SemanticEncoderError('Mô hình embedding trả sai số lượng vector.')
+        self._vectors = dict(zip(self._content_positions, vectors))
 
     def search(self, question, history=None, *, threshold=0.15, top_k=3):
         if not math.isfinite(threshold) or threshold < 0:
@@ -90,17 +93,21 @@ class HybridDocumentIndex:
         if not question.strip() or not self._content_positions:
             return []
 
+        candidate_count = min(
+            len(self.sentences), max(top_k, top_k * self.candidate_multiplier))
         lexical_rows = self.lexical.search(
-            question, history, threshold=0, top_k=max(top_k * 5, len(self.sentences)))
-        lexical = {row['sentence_index']: row for row in lexical_rows}
+            question, history, threshold=0, top_k=candidate_count)
+        if not lexical_rows:
+            return []
         query_vector = self.encoder.encode([question])
         if len(query_vector) != 1:
             raise SemanticEncoderError('Mô hình embedding không trả đúng vector câu hỏi.')
 
         ranked = []
-        for position, vector in zip(self._content_positions, self._vectors):
-            lexical_row = lexical.get(position)
-            lexical_score = lexical_row['score'] if lexical_row else 0
+        for lexical_row in lexical_rows:
+            position = lexical_row['sentence_index']
+            vector = self._vectors[position]
+            lexical_score = lexical_row['score']
             lexical_normalized = lexical_score / (1 + lexical_score)
             semantic_score = max(0, _cosine(query_vector[0], vector))
             score = (
@@ -111,9 +118,10 @@ class HybridDocumentIndex:
                 ranked.append({
                     'text': self.sentences[position],
                     'score': score,
-                    'bm25_score': lexical_row['bm25_score'] if lexical_row else 0,
+                    'bm25_score': lexical_row['bm25_score'],
                     'lexical_score': lexical_score,
                     'semantic_score': semantic_score,
+                    'candidate_count': len(lexical_rows),
                     'sentence_index': position,
                 })
         return sorted(ranked, key=lambda item: (-item['score'], item['sentence_index']))[:top_k]

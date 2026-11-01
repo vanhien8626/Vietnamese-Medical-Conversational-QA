@@ -54,10 +54,17 @@ class SpeechTests(unittest.TestCase):
 
     def test_playback_precedes_question_answer_model(self):
         events = []
+        model = Mock()
+        model.answer.return_value = {
+            'answer': 'virus Dengue', 'score': 0.9,
+            'sources': ['Sốt xuất huyết do virus Dengue gây ra.'],
+            'start': 20, 'end': 32, 'mode': 'reader',
+        }
         with patch('read_document.create_audio', side_effect=lambda *a, **kw: Path('test.mp3')), \
                 patch('read_document.play_audio', side_effect=lambda *a: events.append('play')), \
-                patch('read_document.ReadingModel', side_effect=lambda *a, **kw: events.append('model') or Mock()), \
-                patch('builtins.input', return_value='/thoat'), redirect_stderr(io.StringIO()):
+                patch('read_document.ReadingModel', side_effect=lambda *a, **kw: events.append('model') or model), \
+                patch('builtins.input', side_effect=['Bệnh do virus nào?', '/thoat']), \
+                redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--sample', '--read-aloud']), 0)
         self.assertEqual(events, ['play', 'model'])
 

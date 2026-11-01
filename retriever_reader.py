@@ -66,7 +66,8 @@ class RetrieverReader:
     def __init__(self, document, *, reader=None, model=DEFAULT_MODEL, device='cpu',
                  local_only=False, top_k=3, retrieval_threshold=0.15, context_sentences=1,
                  retriever='bm25', semantic_model=DEFAULT_SEMANTIC_MODEL,
-                 semantic_weight=0.35, semantic_encoder=None):
+                 semantic_weight=0.35, semantic_candidate_multiplier=5,
+                 semantic_encoder=None, no_answer_margin=0.0):
         if type(top_k) is not int or top_k < 1:
             raise ValueError('top_k phải là số nguyên dương.')
         if type(context_sentences) is not int or context_sentences < 0:
@@ -83,6 +84,7 @@ class RetrieverReader:
                 document,
                 semantic_model=semantic_model,
                 semantic_weight=semantic_weight,
+                candidate_multiplier=semantic_candidate_multiplier,
                 device=device,
                 local_only=local_only,
                 encoder=semantic_encoder,
@@ -94,12 +96,14 @@ class RetrieverReader:
         if len(self.spans) != len(self.index.sentences):
             raise ValueError('Không ánh xạ được câu truy xuất sang tài liệu gốc.')
         self.reader = reader
-        self.reader_options = dict(model=model, device=device, local_only=local_only)
+        self.reader_options = dict(
+            model=model, device=device, local_only=local_only,
+            no_answer_margin=no_answer_margin)
         self.top_k = top_k
         self.retrieval_threshold = retrieval_threshold
         self.context_sentences = context_sentences
 
-    def answer(self, question, *, threshold=0.20):
+    def answer(self, question, *, threshold=0.20, reader_question=None):
         if not question.strip():
             raise ValueError('Câu hỏi không được để trống.')
         if not math.isfinite(threshold) or not 0 <= threshold <= 1:
@@ -127,8 +131,11 @@ class RetrieverReader:
         for left, right in merged:
             start, end = self.spans[left][0], self.spans[right][1]
             text = self.document[start:end]
-            prediction = self.reader.answer(text, question, threshold=threshold)
+            effective_reader_question = reader_question or question
+            prediction = self.reader.answer(
+                text, effective_reader_question, threshold=threshold)
             result['contexts'].append({'start': start, 'end': end, 'text': text,
+                                       'reader_question': effective_reader_question,
                                        'reader_answer': prediction['answer'],
                                        'reader_score': prediction['score'],
                                        'answered': bool(prediction['sources'])})
@@ -157,6 +164,9 @@ class RetrieverReader:
                     end=sentence_end,
                 )
             result.update({key: best[key] for key in ('answer', 'score', 'sources', 'start', 'end')})
+            for key in ('no_answer_score', 'score_margin'):
+                if key in best:
+                    result[key] = best[key]
             result['reason'] = 'answered'
             result['score_type'] = 'reader'
         else:

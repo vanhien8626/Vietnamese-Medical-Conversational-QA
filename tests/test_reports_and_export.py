@@ -31,6 +31,26 @@ class AdvancedWorkflowTests(unittest.TestCase):
             with self.subTest(gold=gold), self.assertRaises(ValueError):
                 evaluate_dataset([{'context': 'Tài liệu.', 'turns': [{'question': 'Gì?', 'answer': gold}]}])
 
+    def test_refusal_safety_metrics(self):
+        data = [{
+            'context': 'Sốt xuất huyết do virus Dengue gây ra.',
+            'turns': [
+                {'question': 'Virus nào gây bệnh?',
+                 'answer': 'Sốt xuất huyết do virus Dengue gây ra.'},
+                {'question': 'Thiên hà Andromeda ở đâu?',
+                 'answer': 'Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.',
+                 'unanswerable': True},
+            ],
+        }]
+        report = evaluate_dataset(data)
+
+        self.assertEqual(report['correct_refusals'], 1)
+        self.assertEqual(report['unsafe_answers'], 0)
+        self.assertEqual(report['false_refusals'], 0)
+        self.assertEqual(report['correct_refusal_rate'], 1)
+        self.assertEqual(report['unsafe_answer_rate'], 0)
+        self.assertEqual(report['false_refusal_rate'], 0)
+
     def test_sparse_search_matches_full_scan(self):
         document = ('Viêm phổi do vi khuẩn gây ra. Triệu chứng gồm ho và sốt. '
                     'Người bệnh cần nghỉ ngơi. Trường hợp nặng gây biến chứng. '

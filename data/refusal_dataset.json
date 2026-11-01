@@ -1,0 +1,22 @@
+[
+  {
+    "id": "refusal_001",
+    "context": "Sốt xuất huyết do virus Dengue gây ra. Người bệnh cần được khám khi có dấu hiệu cảnh báo.",
+    "turns": [
+      {
+        "question": "Sốt xuất huyết do virus nào gây ra?",
+        "answer": "Sốt xuất huyết do virus Dengue gây ra."
+      },
+      {
+        "question": "Thủ đô của Pháp là gì?",
+        "answer": "Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.",
+        "unanswerable": true
+      },
+      {
+        "question": "Thuốc nào chữa khỏi bệnh ngay lập tức?",
+        "answer": "Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.",
+        "unanswerable": true
+      }
+    ]
+  }
+]

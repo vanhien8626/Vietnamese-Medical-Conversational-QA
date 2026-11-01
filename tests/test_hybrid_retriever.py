@@ -30,12 +30,16 @@ class HybridRetrieverTests(unittest.TestCase):
             'Tăng huyết áp còn được gọi là huyết áp cao.',
         )
         self.assertGreater(result[0]['semantic_score'], 0.9)
+        self.assertGreaterEqual(result[0]['candidate_count'], 1)
 
     def test_invalid_weight_and_vector_shape_fail_cleanly(self):
         for weight in (-0.1, 1.1, float('nan')):
             with self.assertRaises(ValueError):
                 HybridDocumentIndex('Tài liệu.', encoder=FakeEncoder(),
                                     semantic_weight=weight)
+        with self.assertRaises(ValueError):
+            HybridDocumentIndex('Tài liệu.', encoder=FakeEncoder(),
+                                candidate_multiplier=0)
 
         broken = FakeEncoder()
         broken.encode = lambda texts: [[1.0]] * (len(texts) + 1)

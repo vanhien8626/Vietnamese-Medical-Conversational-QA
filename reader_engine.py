@@ -13,10 +13,14 @@ class ReaderError(RuntimeError):
 class ReadingModel:
     """Tải mô hình một lần; tìm đoạn đáp án trên toàn tài liệu qua cửa sổ token."""
 
-    def __init__(self, model=DEFAULT_MODEL, *, device='cpu', local_only=False):
+    def __init__(self, model=DEFAULT_MODEL, *, device='cpu', local_only=False,
+                 no_answer_margin=0.0):
         if device not in ('cpu', 'cuda'):
             raise ValueError('device phải là cpu hoặc cuda.')
+        if not math.isfinite(no_answer_margin) or no_answer_margin < 0:
+            raise ValueError('no_answer_margin phải là số hữu hạn không âm.')
         self.model = model
+        self.no_answer_margin = no_answer_margin
         try:
             from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
         except ImportError:
@@ -49,19 +53,43 @@ class ReadingModel:
         if not document.strip() or not question.strip():
             raise ValueError('Tài liệu và câu hỏi không được để trống.')
         try:
-            result = self._qa(question=question.strip(), context=document, top_k=1,
+            raw_result = self._qa(question=question.strip(), context=document, top_k=2,
                               handle_impossible_answer=True, max_seq_len=384,
                               doc_stride=128, max_question_len=64, max_answer_len=128)
         except Exception as exc:
             raise ReaderError(f'Không chạy được mô hình ({type(exc).__name__}). '
                               'Kiểm tra bộ nhớ hoặc thử --device cpu.') from None
         try:
-            answer, score = result['answer'], float(result['score'])
-            if not isinstance(answer, str) or not math.isfinite(score) or not 0 <= score <= 1:
+            candidates = raw_result if isinstance(raw_result, list) else [raw_result]
+            if not candidates:
                 raise ValueError
-            if not answer or score < threshold:
-                return {'answer': NO_ANSWER, 'score': score, 'sources': [], 'start': None,
-                        'end': None, 'model': self.model, 'mode': 'reader'}
+            parsed = []
+            for candidate in candidates:
+                answer, score = candidate['answer'], float(candidate['score'])
+                if not isinstance(answer, str) or not math.isfinite(score) or not 0 <= score <= 1:
+                    raise ValueError
+                parsed.append((candidate, answer, score))
+            no_answer_score = max(
+                (score for _, answer, score in parsed if not answer.strip()),
+                default=0,
+            )
+            answered = [item for item in parsed if item[1].strip()]
+            if not answered:
+                return {
+                    'answer': NO_ANSWER, 'score': no_answer_score,
+                    'no_answer_score': no_answer_score,
+                    'score_margin': -no_answer_score, 'sources': [],
+                    'start': None, 'end': None, 'model': self.model, 'mode': 'reader',
+                }
+            result, answer, score = max(answered, key=lambda item: item[2])
+            margin = score - no_answer_score
+            if score < threshold or margin <= getattr(self, 'no_answer_margin', 0.0):
+                return {
+                    'answer': NO_ANSWER, 'score': score,
+                    'no_answer_score': no_answer_score,
+                    'score_margin': margin, 'sources': [],
+                    'start': None, 'end': None, 'model': self.model, 'mode': 'reader',
+                }
             start, end = result['start'], result['end']
             if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(document):
                 raise ValueError
@@ -81,5 +109,9 @@ class ReadingModel:
             raise ReaderError('Mô hình trả kết quả không hợp lệ hoặc vị trí đáp án không khớp tài liệu.') from None
         # Bằng chứng được lấy từ tài liệu gốc, không tạo thêm nội dung.
         evidence = document[max(0, start - 120):min(len(document), end + 120)]
-        return {'answer': answer, 'score': score, 'sources': [evidence], 'start': start,
-                'end': end, 'model': self.model, 'mode': 'reader'}
+        return {
+            'answer': answer, 'score': score,
+            'no_answer_score': no_answer_score, 'score_margin': margin,
+            'sources': [evidence], 'start': start, 'end': end,
+            'model': self.model, 'mode': 'reader',
+        }
