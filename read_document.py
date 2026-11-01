@@ -110,8 +110,13 @@ def main(argv=None):
                 if used_context:
                     print('Hiểu theo ngữ cảnh:', resolved_question)
                 print('Trả lời:', result['answer'])
-                for source in result['sources']:
-                    print('Bằng chứng:', source)
+                for number, source in enumerate(result['sources'], 1):
+                    label = 'Đoạn văn gốc dùng để trả lời'
+                    if len(result['sources']) > 1:
+                        label += f' {number}'
+                    print(f'{label}:\n  “{source}”')
+                if result.get('start') is not None and result.get('end') is not None:
+                    print(f"Vị trí đáp án trong tài liệu: ký tự {result['start']}–{result['end']}")
                 print(f"Điểm mô hình: {result['score']:.4f} (chưa hiệu chỉnh độ tin cậy)")
 
         if args.question is not None:

@@ -52,3 +52,23 @@ class ConversationMemoryTests(unittest.TestCase):
                          'Sốt xuất huyết lây truyền như thế nào?')
         self.assertIn('Hiểu theo ngữ cảnh: Sốt xuất huyết lây truyền như thế nào?', output.getvalue())
         self.assertIn('Đã xóa lịch sử và chủ đề hội thoại.', output.getvalue())
+
+    def test_output_labels_original_source_and_answer_offsets_clearly(self):
+        backend = Mock()
+        backend.answer.return_value = {
+            'answer': 'Dengue',
+            'score': 0.8,
+            'sources': ['Sốt xuất huyết do virus Dengue gây ra.'],
+            'start': 28,
+            'end': 34,
+        }
+        with patch('read_document.ReadingModel', return_value=backend), \
+                redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()):
+            self.assertEqual(main([
+                '--sample', '--question', 'Virus nào gây bệnh?'
+            ]), 0)
+
+        text = output.getvalue()
+        self.assertIn('Đoạn văn gốc dùng để trả lời:', text)
+        self.assertIn('“Sốt xuất huyết do virus Dengue gây ra.”', text)
+        self.assertIn('Vị trí đáp án trong tài liệu: ký tự 28–34', text)
