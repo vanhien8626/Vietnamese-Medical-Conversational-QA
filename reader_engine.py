@@ -43,7 +43,7 @@ class ReadingModel:
                               'kết nối Hugging Face, bộ nhớ và thiết bị. Nếu dùng --local-only, '
                               'hãy tải mô hình trước hoặc chỉ định thư mục mô hình cục bộ.') from None
 
-    def answer(self, document, question, *, threshold=0.05):
+    def answer(self, document, question, *, threshold=0.20):
         if not math.isfinite(threshold) or not 0 <= threshold <= 1:
             raise ValueError('threshold phải nằm trong [0, 1].')
         if not document.strip() or not question.strip():

@@ -45,12 +45,15 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 - `--model TEN_HOAC_THU_MUC` chọn mô hình khác tương thích `AutoModelForQuestionAnswering` và có trọng số safetensors. Không chạy mã từ xa của mô hình.
 - `--device cuda` dùng GPU khi đã cài PyTorch hỗ trợ CUDA; mặc định không cần GPU.
 - Tài liệu dài được xử lý bằng cửa sổ token chồng lấp. Mỗi câu hỏi xử lý độc lập; hỏi đầy đủ đối tượng thay vì chỉ hỏi "nó là gì?".
-- `--threshold 0.05` là ngưỡng điểm mặc định; có thể chỉnh trong [0, 1]. Điểm chưa hiệu chỉnh nên không phải độ tin cậy y khoa. Khi mô hình không tìm được đáp án hoặc điểm thấp, chương trình từ chối trả lời.
+- `--threshold 0.20` là ngưỡng điểm mặc định; có thể chỉnh trong [0, 1]. Điểm chưa hiệu chỉnh nên không phải độ tin cậy y khoa. Khi mô hình không tìm được đáp án hoặc điểm thấp, chương trình từ chối trả lời. Ngưỡng này được nâng từ 0.05 sau khi kiểm tra cho thấy mô hình có thể chọn sai một span với điểm rất thấp.
 - Đây là **trích xuất đoạn trả lời**, không phải LLM tự viết giải thích dài; không đọc PDF/ảnh/URL trực tiếp. Bằng chứng và vị trí được đối chiếu với văn bản gốc.
 - Khi chạy ở dạng văn bản, chương trình ghi rõ `Đoạn văn gốc dùng để trả lời`;
   phần này được trích nguyên văn từ tài liệu, không phải bản tóm tắt do mô hình tạo.
+- Với câu hỏi yêu cầu danh sách triệu chứng hoặc dấu hiệu, nếu span của mô hình nằm
+  trong một câu liệt kê rõ bằng `gồm` hoặc `bao gồm`, chương trình mở rộng đáp án
+  thành nguyên câu trong tài liệu để tránh chỉ hiển thị mục đầu tiên.
 
-Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 42 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
+Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 44 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
 ## Đọc toàn bộ tài liệu thành tiếng Việt
 
@@ -138,7 +141,7 @@ Tài liệu → chỉ mục từ khóa/IDF → top-k câu liên quan
 - `--top-k`: số câu được retriever chọn (mặc định 3).
 - `--retrieval-threshold`: ngưỡng từ khóa/IDF (mặc định 0.15).
 - `--context-sentences`: số câu lân cận mỗi phía (mặc định 1); đặt 0 nếu chỉ muốn đọc đúng các câu được chọn.
-- `--threshold`: ngưỡng điểm mô hình đọc hiểu (mặc định 0.05), độc lập với điểm truy xuất.
+- `--threshold`: ngưỡng điểm mô hình đọc hiểu (mặc định 0.20), độc lập với điểm truy xuất.
 - Nếu không truy xuất được câu nào, không tải/gọi mô hình và không tự quay lại đọc toàn tài liệu. Nếu có bằng chứng nhưng reader không tìm được đáp án, trả lời từ chối riêng.
 - JSON có `passages` (xếp hạng retriever), `contexts` (văn bản reader thực sự nhận), `reason` và `start`/`end` tính trên **tài liệu gốc**, kể cả văn bản Unicode dạng tách dấu.
 - Nếu nhiều ngữ cảnh trả lời được, chọn đáp án có điểm reader cao nhất; điểm giữa các đoạn chưa được hiệu chỉnh. Không cộng hai loại điểm với nhau.

@@ -22,7 +22,8 @@ def main(argv=None):
     parser.add_argument('--model', default=DEFAULT_MODEL, help='Tên trên Hugging Face hoặc thư mục mô hình.')
     parser.add_argument('--device', choices=('cpu', 'cuda'), default='cpu')
     parser.add_argument('--local-only', action='store_true', help='Chỉ dùng mô hình đã lưu trên máy.')
-    parser.add_argument('--threshold', type=float, default=0.05, help='Ngưỡng điểm mô hình trong [0, 1].')
+    parser.add_argument('--threshold', type=float, default=0.20,
+                        help='Ngưỡng điểm mô hình trong [0, 1] (mặc định 0.20).')
     parser.add_argument('--mode', choices=('reader', 'retriever-reader'), default='reader',
                         help='Đọc toàn tài liệu hoặc truy xuất trước rồi đọc (mặc định reader).')
     parser.add_argument('--top-k', type=int, default=3, help='Số câu truy xuất trong chế độ retriever-reader.')

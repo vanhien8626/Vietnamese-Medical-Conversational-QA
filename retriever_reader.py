@@ -6,6 +6,21 @@ from rag_engine import DocumentIndex, FALLBACK
 from reader_engine import DEFAULT_MODEL, NO_ANSWER, ReaderError, ReadingModel
 
 
+def _expand_enumerated_answer(question, passages, answer):
+    """Return a full source sentence for explicit symptom/sign list questions."""
+    question_lower = question.lower()
+    if not any(term in question_lower for term in ('triệu chứng', 'dấu hiệu')):
+        return None
+    for passage in passages:
+        text = passage['text']
+        lowered = text.lower()
+        if (answer in text and
+                any(term in lowered for term in ('triệu chứng', 'dấu hiệu')) and
+                re.search(r'\b(?:gồm|bao gồm)\b', lowered)):
+            return passage
+    return None
+
+
 def sentence_spans(document):
     """Return sentence bounds in the original text, including decomposed Unicode."""
     boundaries = [0]
@@ -50,7 +65,7 @@ class RetrieverReader:
         self.retrieval_threshold = retrieval_threshold
         self.context_sentences = context_sentences
 
-    def answer(self, question, *, threshold=0.05):
+    def answer(self, question, *, threshold=0.20):
         if not question.strip():
             raise ValueError('Câu hỏi không được để trống.')
         if not math.isfinite(threshold) or not 0 <= threshold <= 1:
@@ -93,6 +108,15 @@ class RetrieverReader:
                 best = {**prediction, 'start': start + local_start,
                         'end': start + local_end, 'sources': [text]}
         if best:
+            expanded = _expand_enumerated_answer(
+                question, passages, best['answer'])
+            if expanded:
+                sentence_start, sentence_end = self.spans[expanded['sentence_index']]
+                best.update(
+                    answer=self.document[sentence_start:sentence_end],
+                    start=sentence_start,
+                    end=sentence_end,
+                )
             result.update({key: best[key] for key in ('answer', 'score', 'sources', 'start', 'end')})
             result['reason'] = 'answered'
         else:

@@ -82,6 +82,21 @@ class RetrieverReaderTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 RetrieverReader('Một tài liệu.', **options)
 
+    def test_symptom_span_expands_to_explicit_source_list(self):
+        document = (
+            'Các triệu chứng của bệnh có thể gồm sốt cao, đau đầu và buồn nôn. '
+            'Người bệnh cần theo dõi.'
+        )
+        reader = reader_for('sốt cao')
+
+        result = RetrieverReader(
+            document, reader=reader, top_k=1, context_sentences=0
+        ).answer('Bệnh có triệu chứng gì?')
+
+        expected = 'Các triệu chứng của bệnh có thể gồm sốt cao, đau đầu và buồn nôn.'
+        self.assertEqual(result['answer'], expected)
+        self.assertEqual(document[result['start']:result['end']], expected)
+
 
 if __name__ == '__main__':
     unittest.main()

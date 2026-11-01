@@ -5,6 +5,7 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import Mock, patch
 
+from rag_engine import DocumentIndex
 from read_document import main
 
 
@@ -31,6 +32,17 @@ class SampleDocumentTests(unittest.TestCase):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
             main(['--sample', '--document', 'any.txt'])
         self.assertEqual(error.exception.code, 2)
+
+    def test_symptom_question_retrieves_the_actual_symptom_list(self):
+        from pathlib import Path
+        document = (Path(__file__).resolve().parents[1] / 'data/dengue_document.txt').read_text()
+        passages = DocumentIndex(document).search(
+            'Sốt xuất huyết có triệu chứng gì?', top_k=3)
+
+        self.assertTrue(any(
+            passage['text'].startswith('Các triệu chứng thường gặp của sốt xuất huyết')
+            for passage in passages
+        ))
 
 
 if __name__ == '__main__':
