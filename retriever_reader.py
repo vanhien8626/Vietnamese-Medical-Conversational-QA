@@ -21,6 +21,24 @@ def _expand_enumerated_answer(question, passages, answer):
     return None
 
 
+def _is_heading(text):
+    letters = [character for character in text if character.isalpha()]
+    return bool(letters) and len(text.split()) <= 16 and all(
+        character.isupper() for character in letters)
+
+
+def _incomplete_answer_source(passages, answer):
+    """Expand a span that visibly ends on a connector or dangling negation."""
+    normalized = answer.strip().lower().rstrip('.,;:')
+    endings = (' không', ' có', ' gồm', ' bao gồm', ' vì', ' do', ' qua', ' khi', ' và', ' hoặc')
+    if normalized not in {word.strip() for word in endings} and not normalized.endswith(endings):
+        return None
+    for passage in passages:
+        if answer in passage['text'] and not _is_heading(passage['text']):
+            return passage
+    return None
+
+
 def sentence_spans(document):
     """Return sentence bounds in the original text, including decomposed Unicode."""
     boundaries = [0]
@@ -73,7 +91,8 @@ class RetrieverReader:
         passages = self.index.search(question, top_k=self.top_k, threshold=self.retrieval_threshold)
         result = {'answer': FALLBACK, 'score': 0, 'sources': [], 'start': None, 'end': None,
                   'mode': 'retriever-reader', 'passages': passages, 'contexts': [],
-                  'model': self.reader_options['model'], 'reason': 'no_retrieval_match'}
+                  'model': self.reader_options['model'], 'reason': 'no_retrieval_match',
+                  'score_type': None}
         if not passages:
             return result  # Do not load a model or silently read the whole document.
         intervals = sorted((max(0, p['sentence_index'] - self.context_sentences),
@@ -108,8 +127,12 @@ class RetrieverReader:
                 best = {**prediction, 'start': start + local_start,
                         'end': start + local_end, 'sources': [text]}
         if best:
+            if _is_heading(best['answer']):
+                best = None
+        if best:
             expanded = _expand_enumerated_answer(
                 question, passages, best['answer'])
+            expanded = expanded or _incomplete_answer_source(passages, best['answer'])
             if expanded:
                 sentence_start, sentence_end = self.spans[expanded['sentence_index']]
                 best.update(
@@ -119,6 +142,23 @@ class RetrieverReader:
                 )
             result.update({key: best[key] for key in ('answer', 'score', 'sources', 'start', 'end')})
             result['reason'] = 'answered'
+            result['score_type'] = 'reader'
         else:
-            result.update(answer=NO_ANSWER, reason='reader_abstained')
+            fallback = next((
+                passage for passage in passages
+                if passage['score'] >= 0.4 and not _is_heading(passage['text'])
+            ), None)
+            if fallback:
+                start, end = self.spans[fallback['sentence_index']]
+                result.update(
+                    answer=self.document[start:end],
+                    score=fallback['score'],
+                    sources=[self.document[start:end]],
+                    start=start,
+                    end=end,
+                    reason='retrieval_fallback',
+                    score_type='retrieval',
+                )
+            else:
+                result.update(answer=NO_ANSWER, reason='reader_abstained')
         return result

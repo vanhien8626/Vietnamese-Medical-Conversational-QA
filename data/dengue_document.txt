@@ -32,7 +32,7 @@ Trong giai đoạn hồi phục, tình trạng chung có thể cải thiện, ng
 
 DẤU HIỆU CẢNH BÁO VÀ BIỂU HIỆN NẶNG
 
-Những dấu hiệu cảnh báo cần được chú ý gồm đau bụng nhiều hoặc ấn đau vùng gan, nôn dai dẳng, chảy máu niêm mạc, lừ đừ hoặc vật vã. Người bệnh cũng có thể xuất hiện tích tụ dịch, gan to hoặc hematocrit tăng đồng thời với tiểu cầu giảm nhanh, gợi ý tình trạng thoát huyết tương. Đây là những dấu hiệu cần được nhân viên y tế đánh giá; người bệnh và người chăm sóc không nên tự diễn giải xét nghiệm tại nhà.
+Các dấu hiệu cảnh báo của sốt xuất huyết gồm đau bụng nhiều hoặc ấn đau vùng gan, nôn dai dẳng, chảy máu niêm mạc, lừ đừ hoặc vật vã. Người bệnh cũng có thể xuất hiện tích tụ dịch, gan to hoặc hematocrit tăng đồng thời với tiểu cầu giảm nhanh, gợi ý tình trạng thoát huyết tương. Đây là những dấu hiệu cần được nhân viên y tế đánh giá; người bệnh và người chăm sóc không nên tự diễn giải xét nghiệm tại nhà.
 
 Người bệnh cần được đưa đến cơ sở y tế ngay khi có khó thở, tay chân lạnh, da tái, choáng váng, ngất, lơ mơ, tiểu ít rõ rệt, nôn ra máu hoặc đi ngoài phân đen. Đây có thể là những biểu hiện của tình trạng nghiêm trọng. Không nên tự xử trí kéo dài tại nhà khi có các dấu hiệu này.
 
@@ -44,7 +44,7 @@ Chẩn đoán sốt xuất huyết dựa trên sự kết hợp giữa triệu c
 
 Giảm tiểu cầu có thể gặp ở người mắc sốt xuất huyết. Tuy nhiên, số lượng tiểu cầu không phải yếu tố duy nhất quyết định mức độ nặng hay việc nhập viện. Hematocrit tăng trong một số tình huống có thể gợi ý cô đặc máu do thoát huyết tương, nhưng việc diễn giải cần tính đến tình trạng mất nước, chảy máu, truyền dịch và các yếu tố khác.
 
-Các xét nghiệm khuếch đại acid nucleic như RT-PCR và xét nghiệm kháng nguyên NS1 thường hữu ích trong giai đoạn sớm của bệnh. Kháng thể IgM thường bắt đầu phát hiện được muộn hơn; một kết quả IgG đơn lẻ không đủ để khẳng định một ca Dengue cấp. Giá trị của mỗi xét nghiệm phụ thuộc vào ngày bệnh, loại mẫu và bộ xét nghiệm được sử dụng. Một kết quả âm tính không phải lúc nào cũng loại trừ được bệnh. Nhân viên y tế sẽ lựa chọn xét nghiệm phù hợp và cân nhắc việc làm lại hoặc theo dõi thêm nếu cần.
+Các xét nghiệm thường dùng để phát hiện sốt xuất huyết trong giai đoạn sớm gồm xét nghiệm khuếch đại acid nucleic như RT-PCR và xét nghiệm kháng nguyên NS1. Kháng thể IgM thường bắt đầu phát hiện được muộn hơn; một kết quả IgG đơn lẻ không đủ để khẳng định một ca Dengue cấp. Giá trị của mỗi xét nghiệm phụ thuộc vào ngày bệnh, loại mẫu và bộ xét nghiệm được sử dụng. Một kết quả âm tính không phải lúc nào cũng loại trừ được bệnh. Nhân viên y tế sẽ lựa chọn xét nghiệm phù hợp và cân nhắc việc làm lại hoặc theo dõi thêm nếu cần.
 
 CHĂM SÓC VÀ ĐIỀU TRỊ
 

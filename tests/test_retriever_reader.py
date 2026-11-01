@@ -51,13 +51,15 @@ class RetrieverReaderTests(unittest.TestCase):
             self.assertEqual(result['sources'], [])
             loader.assert_not_called()
 
-    def test_model_can_abstain_despite_retrieval_match(self):
+    def test_model_abstention_uses_grounded_retrieval_fallback(self):
         reader = Mock(model='controlled-reader')
         reader.answer.return_value = {'answer': NO_ANSWER, 'score': 0.95, 'sources': [], 'start': None, 'end': None}
         result = RetrieverReader('Bệnh gây sốt.', reader=reader).answer('Bệnh gây gì?')
-        self.assertEqual(result['reason'], 'reader_abstained')
-        self.assertEqual(result['sources'], [])
-        self.assertIsNone(result['start'])
+        self.assertEqual(result['reason'], 'retrieval_fallback')
+        self.assertEqual(result['answer'], 'Bệnh gây sốt.')
+        self.assertEqual(result['sources'], ['Bệnh gây sốt.'])
+        self.assertEqual(result['score_type'], 'retrieval')
+        self.assertEqual(result['start'], 0)
 
     def test_local_reader_scores_choose_best_context_and_reuse_model(self):
         reader = Mock(model='controlled-reader')
@@ -96,6 +98,15 @@ class RetrieverReaderTests(unittest.TestCase):
         expected = 'Các triệu chứng của bệnh có thể gồm sốt cao, đau đầu và buồn nôn.'
         self.assertEqual(result['answer'], expected)
         self.assertEqual(document[result['start']:result['end']], expected)
+
+    def test_heading_model_answer_is_rejected_before_fallback(self):
+        document = 'CHẨN ĐOÁN VÀ XÉT NGHIỆM\nRT-PCR giúp phát hiện virus.'
+        reader = reader_for('CHẨN ĐOÁN VÀ XÉT NGHIỆM')
+        result = RetrieverReader(
+            document, reader=reader, top_k=1, context_sentences=0
+        ).answer('Xét nghiệm nào?')
+
+        self.assertNotEqual(result['answer'], 'CHẨN ĐOÁN VÀ XÉT NGHIỆM')
 
 
 if __name__ == '__main__':

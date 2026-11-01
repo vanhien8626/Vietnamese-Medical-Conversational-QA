@@ -118,7 +118,11 @@ def main(argv=None):
                     print(f'{label}:\n  “{source}”')
                 if result.get('start') is not None and result.get('end') is not None:
                     print(f"Vị trí đáp án trong tài liệu: ký tự {result['start']}–{result['end']}")
-                print(f"Điểm mô hình: {result['score']:.4f} (chưa hiệu chỉnh độ tin cậy)")
+                if result.get('score_type') == 'retrieval':
+                    print('Cách trả lời: truy xuất nguyên câu vì mô hình đọc hiểu đã từ chối.')
+                    print(f"Điểm truy xuất: {result['score']:.4f} (không phải xác suất đúng)")
+                else:
+                    print(f"Điểm mô hình: {result['score']:.4f} (chưa hiệu chỉnh độ tin cậy)")
 
         if args.question is not None:
             ask(args.question)

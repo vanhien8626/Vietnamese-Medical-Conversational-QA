@@ -53,7 +53,7 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
   trong một câu liệt kê rõ bằng `gồm` hoặc `bao gồm`, chương trình mở rộng đáp án
   thành nguyên câu trong tài liệu để tránh chỉ hiển thị mục đầu tiên.
 
-Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 44 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
+Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 45 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
 ## Đọc toàn bộ tài liệu thành tiếng Việt
 
@@ -143,6 +143,10 @@ Tài liệu → chỉ mục từ khóa/IDF → top-k câu liên quan
 - `--context-sentences`: số câu lân cận mỗi phía (mặc định 1); đặt 0 nếu chỉ muốn đọc đúng các câu được chọn.
 - `--threshold`: ngưỡng điểm mô hình đọc hiểu (mặc định 0.20), độc lập với điểm truy xuất.
 - Nếu không truy xuất được câu nào, không tải/gọi mô hình và không tự quay lại đọc toàn tài liệu. Nếu có bằng chứng nhưng reader không tìm được đáp án, trả lời từ chối riêng.
+- Nếu reader từ chối nhưng Retriever tìm được một câu nguồn không phải tiêu đề với
+  điểm truy xuất từ 0.4, chương trình trả nguyên câu đó và ghi
+  `Cách trả lời: truy xuất nguyên câu`. Kết quả này dùng điểm truy xuất, không
+  giả làm điểm mô hình. Nếu bằng chứng truy xuất cũng yếu, chương trình vẫn từ chối.
 - JSON có `passages` (xếp hạng retriever), `contexts` (văn bản reader thực sự nhận), `reason` và `start`/`end` tính trên **tài liệu gốc**, kể cả văn bản Unicode dạng tách dấu.
 - Nếu nhiều ngữ cảnh trả lời được, chọn đáp án có điểm reader cao nhất; điểm giữa các đoạn chưa được hiệu chỉnh. Không cộng hai loại điểm với nhau.
 - Câu hỏi tương tác có thể dùng tối đa 5 lượt lịch sử để giải quyết một số tham chiếu rõ ràng. Câu hỏi `--question` chạy một lần vẫn độc lập. Retriever hiện là từ khóa/IDF, chưa có embedding, vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không phải RAG sinh văn bản.
