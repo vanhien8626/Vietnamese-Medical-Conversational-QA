@@ -2,7 +2,7 @@ SỐT XUẤT HUYẾT DENGUE: NGUYÊN NHÂN, TRIỆU CHỨNG, THEO DÕI VÀ PHÒN
 
 Sốt xuất huyết Dengue là bệnh truyền nhiễm do virus Dengue gây ra. Bệnh gặp ở nhiều khu vực nhiệt đới và cận nhiệt đới, trong đó có Việt Nam. Bệnh có thể xuất hiện quanh năm và thường gia tăng vào những thời điểm điều kiện thời tiết thuận lợi cho muỗi sinh sản. Người lớn và trẻ em đều có thể mắc bệnh. Một số người chỉ có biểu hiện nhẹ, nhưng một số trường hợp có thể tiến triển nặng và cần được điều trị tại bệnh viện.
 
-Virus Dengue có bốn týp huyết thanh chính, được gọi là DENV-1, DENV-2, DENV-3 và DENV-4. Sau khi mắc bệnh do một týp virus, cơ thể thường có miễn dịch lâu dài với týp đó nhưng không được bảo vệ lâu dài trước tất cả các týp còn lại. Vì vậy, một người có thể mắc sốt xuất huyết nhiều lần trong đời. Nhiễm một týp virus khác ở lần sau có thể làm tăng nguy cơ bệnh nặng, nhưng không phải mọi trường hợp tái nhiễm đều diễn tiến nặng.
+Virus Dengue có bốn týp huyết thanh, được gọi là DENV-1, DENV-2, DENV-3 và DENV-4. Sau khi mắc bệnh do một týp virus, cơ thể thường có miễn dịch lâu dài với týp đó. Khả năng bảo vệ chéo đối với các týp khác chỉ một phần và có tính tạm thời. Vì vậy, một người có thể mắc sốt xuất huyết nhiều lần trong đời. Nhiễm một týp virus khác ở lần sau có thể làm tăng nguy cơ bệnh nặng, nhưng không phải mọi trường hợp tái nhiễm đều diễn tiến nặng.
 
 ĐƯỜNG LÂY TRUYỀN
 
@@ -10,7 +10,7 @@ Sốt xuất huyết Dengue lây truyền sang người chủ yếu qua vết đ
 
 Muỗi Aedes thường hoạt động vào ban ngày, đặc biệt vào sáng sớm và chiều muộn. Tuy nhiên, muỗi vẫn có thể đốt vào các thời điểm khác. Loài muỗi này thường sinh sản trong các dụng cụ có nước đọng ở trong hoặc quanh nhà, như xô, chậu, lọ hoa, bể chứa nước, lốp xe cũ và các vật phế thải có khả năng giữ nước. Những dụng cụ nhỏ cũng có thể trở thành nơi phát triển của bọ gậy.
 
-Bệnh không lây qua những tiếp xúc thông thường như bắt tay, nói chuyện, ăn chung hoặc ngồi cạnh người bệnh. Việc phòng bệnh cần tập trung vào tránh muỗi đốt và loại bỏ nơi muỗi sinh sản. Người đang mắc bệnh cũng cần tránh bị muỗi đốt để hạn chế khả năng muỗi tiếp tục truyền virus cho người khác.
+Bệnh không lây qua những tiếp xúc thông thường như bắt tay, nói chuyện, ăn chung hoặc ngồi cạnh người bệnh. Ngoài đường truyền qua muỗi, một số đường truyền hiếm đã được ghi nhận, chẳng hạn từ mẹ sang con quanh thời điểm sinh hoặc qua máu, kim tiêm và ghép tạng. Việc phòng bệnh trong cộng đồng vẫn tập trung vào tránh muỗi đốt và loại bỏ nơi muỗi sinh sản. Người đang mắc bệnh cũng cần tránh bị muỗi đốt để hạn chế khả năng muỗi tiếp tục truyền virus cho người khác.
 
 THỜI GIAN Ủ BỆNH VÀ CÁC BIỂU HIỆN BAN ĐẦU
 
@@ -24,7 +24,7 @@ Diễn biến sốt xuất huyết thường được mô tả qua ba giai đo�
 
 Giai đoạn sốt thường kéo dài từ 2 đến 7 ngày. Người bệnh có thể sốt cao, mệt mỏi, đau nhức cơ thể và ăn uống kém. Trong thời gian này, cần chú ý khả năng uống nước, lượng nước tiểu và sự xuất hiện của những dấu hiệu cảnh báo.
 
-Giai đoạn nguy hiểm thường xuất hiện vào khoảng ngày thứ 3 đến ngày thứ 7 kể từ khi bắt đầu có triệu chứng, thường quanh thời điểm người bệnh giảm sốt. Ở một số bệnh nhân, tính thấm thành mạch tăng lên làm dịch thoát ra ngoài lòng mạch. Nếu tình trạng này đáng kể, người bệnh có thể bị sốc hoặc tích tụ dịch gây khó thở. Các biểu hiện nặng khác có thể gồm chảy máu nghiêm trọng hoặc tổn thương cơ quan.
+Giai đoạn nguy hiểm thường xuất hiện vào khoảng ngày thứ 3 đến ngày thứ 7 kể từ khi bắt đầu có triệu chứng, thường quanh thời điểm người bệnh giảm sốt, và có thể kéo dài khoảng 24 đến 48 giờ. Ở một số bệnh nhân, tính thấm thành mạch tăng lên làm huyết tương thoát ra ngoài lòng mạch. Nếu tình trạng này đáng kể, người bệnh có thể bị sốc hoặc tích tụ dịch gây khó thở. Sốt xuất huyết Dengue nặng còn có thể biểu hiện bằng chảy máu nặng hoặc tổn thương cơ quan nặng.
 
 Việc giảm sốt không đồng nghĩa chắc chắn với việc đã khỏi bệnh. Một người đang giảm sốt nhưng xuất hiện đau bụng nhiều, nôn liên tục, lừ đừ, tay chân lạnh hoặc tiểu ít cần được đánh giá y tế ngay. Không nên chờ người bệnh sốt trở lại mới đưa đi khám.
 
@@ -32,7 +32,7 @@ Trong giai đoạn hồi phục, tình trạng chung có thể cải thiện, ng
 
 DẤU HIỆU CẢNH BÁO VÀ BIỂU HIỆN NẶNG
 
-Những dấu hiệu cảnh báo cần được chú ý gồm đau bụng nhiều hoặc đau bụng liên tục, nôn dai dẳng, chảy máu niêm mạc, lừ đừ hoặc vật vã. Người bệnh cũng có thể xuất hiện tích tụ dịch, gan to hoặc những biến đổi xét nghiệm gợi ý tình trạng thoát huyết tương. Các dấu hiệu này cần được nhân viên y tế đánh giá trong bối cảnh cụ thể.
+Những dấu hiệu cảnh báo cần được chú ý gồm đau bụng nhiều hoặc ấn đau vùng gan, nôn dai dẳng, chảy máu niêm mạc, lừ đừ hoặc vật vã. Người bệnh cũng có thể xuất hiện tích tụ dịch, gan to hoặc hematocrit tăng đồng thời với tiểu cầu giảm nhanh, gợi ý tình trạng thoát huyết tương. Đây là những dấu hiệu cần được nhân viên y tế đánh giá; người bệnh và người chăm sóc không nên tự diễn giải xét nghiệm tại nhà.
 
 Người bệnh cần được đưa đến cơ sở y tế ngay khi có khó thở, tay chân lạnh, da tái, choáng váng, ngất, lơ mơ, tiểu ít rõ rệt, nôn ra máu hoặc đi ngoài phân đen. Đây có thể là những biểu hiện của tình trạng nghiêm trọng. Không nên tự xử trí kéo dài tại nhà khi có các dấu hiệu này.
 
@@ -44,15 +44,15 @@ Chẩn đoán sốt xuất huyết dựa trên sự kết hợp giữa triệu c
 
 Giảm tiểu cầu có thể gặp ở người mắc sốt xuất huyết. Tuy nhiên, số lượng tiểu cầu không phải yếu tố duy nhất quyết định mức độ nặng hay việc nhập viện. Hematocrit tăng trong một số tình huống có thể gợi ý cô đặc máu do thoát huyết tương, nhưng việc diễn giải cần tính đến tình trạng mất nước, chảy máu, truyền dịch và các yếu tố khác.
 
-Các xét nghiệm phát hiện virus, kháng nguyên NS1 hoặc kháng thể có giá trị khác nhau tùy thời điểm mắc bệnh. Một kết quả âm tính không phải lúc nào cũng loại trừ được bệnh. Nhân viên y tế sẽ lựa chọn xét nghiệm phù hợp và cân nhắc việc làm lại hoặc theo dõi thêm nếu cần.
+Các xét nghiệm khuếch đại acid nucleic như RT-PCR và xét nghiệm kháng nguyên NS1 thường hữu ích trong giai đoạn sớm của bệnh. Kháng thể IgM thường bắt đầu phát hiện được muộn hơn; một kết quả IgG đơn lẻ không đủ để khẳng định một ca Dengue cấp. Giá trị của mỗi xét nghiệm phụ thuộc vào ngày bệnh, loại mẫu và bộ xét nghiệm được sử dụng. Một kết quả âm tính không phải lúc nào cũng loại trừ được bệnh. Nhân viên y tế sẽ lựa chọn xét nghiệm phù hợp và cân nhắc việc làm lại hoặc theo dõi thêm nếu cần.
 
 CHĂM SÓC VÀ ĐIỀU TRỊ
 
-Điều trị sốt xuất huyết chủ yếu là điều trị hỗ trợ và theo dõi diễn biến. Không phải tất cả người mắc bệnh đều phải nhập viện. Quyết định theo dõi tại nhà hay điều trị tại bệnh viện cần dựa trên đánh giá của nhân viên y tế, khả năng ăn uống, các dấu hiệu cảnh báo, bệnh nền và điều kiện chăm sóc.
+Hiện chưa có thuốc kháng virus đặc hiệu được sử dụng thường quy để điều trị sốt xuất huyết; điều trị chủ yếu là hỗ trợ và theo dõi diễn biến. Không phải tất cả người mắc bệnh đều phải nhập viện. Quyết định theo dõi tại nhà hay điều trị tại bệnh viện cần dựa trên đánh giá của nhân viên y tế, khả năng ăn uống, các dấu hiệu cảnh báo, bệnh nền và điều kiện chăm sóc.
 
 Nếu được hướng dẫn theo dõi tại nhà, người bệnh cần nghỉ ngơi và uống dịch phù hợp theo chỉ dẫn. Có thể chia thành nhiều lần uống nhỏ khi người bệnh thấy buồn nôn. Khi sử dụng dung dịch oresol, cần pha đúng lượng nước ghi trên bao bì; không tự pha đặc hơn hoặc loãng hơn. Người không uống được hoặc nôn nhiều cần được đánh giá y tế.
 
-Paracetamol có thể được sử dụng để hạ sốt theo hướng dẫn của nhân viên y tế hoặc hướng dẫn phù hợp trên nhãn thuốc. Liều dùng phụ thuộc vào tuổi, cân nặng, bệnh nền và những thuốc đang sử dụng. Cần tránh dùng đồng thời nhiều sản phẩm cùng chứa paracetamol vì có thể dẫn đến quá liều.
+Paracetamol có thể được sử dụng để hạ sốt theo hướng dẫn của nhân viên y tế hoặc hướng dẫn phù hợp trên nhãn thuốc. Liều dùng phụ thuộc vào tuổi, cân nặng, bệnh gan và những thuốc đang sử dụng. Cần tránh dùng đồng thời nhiều sản phẩm cùng chứa paracetamol vì có thể dẫn đến quá liều và tổn thương gan.
 
 Không tự dùng aspirin, ibuprofen hoặc các thuốc chống viêm không steroid khác khi nghi ngờ sốt xuất huyết, vì các thuốc này có thể làm tăng nguy cơ chảy máu. Nếu người bệnh đang dùng thuốc chống đông hoặc thuốc điều trị bệnh nền, cần báo cho bác sĩ; không tự ý ngừng hoặc thay đổi thuốc đang được kê đơn.
 
@@ -70,9 +70,9 @@ PHÒNG NGỪA TRONG GIA ĐÌNH VÀ CỘNG ĐỒNG
 
 Phòng sốt xuất huyết cần kết hợp loại bỏ nơi muỗi sinh sản và giảm tiếp xúc với muỗi. Các gia đình nên kiểm tra thường xuyên dụng cụ chứa nước, đậy kín bể hoặc thùng nước, làm sạch những dụng cụ phù hợp và loại bỏ vật phế thải có thể giữ nước. Lọ hoa, khay nước và những vị trí đọng nước nhỏ cũng cần được chú ý.
 
-Có thể giảm nguy cơ muỗi đốt bằng cách mặc quần áo phù hợp, sử dụng màn, lắp lưới chống muỗi và dùng sản phẩm xua muỗi theo hướng dẫn. Trẻ em cần được người lớn hỗ trợ sử dụng sản phẩm phù hợp với độ tuổi. Vì muỗi Aedes hoạt động vào ban ngày, việc tránh muỗi đốt cần được thực hiện cả ban ngày lẫn ban đêm.
+Có thể giảm nguy cơ muỗi đốt bằng cách mặc quần áo che phủ phù hợp, sử dụng màn, lắp lưới chống muỗi và dùng sản phẩm xua muỗi theo hướng dẫn trên nhãn. Trẻ em cần được người lớn hỗ trợ sử dụng sản phẩm phù hợp với độ tuổi. Vì muỗi Aedes hoạt động mạnh vào ban ngày nhưng vẫn có thể đốt vào thời điểm khác, việc tránh muỗi đốt cần được thực hiện cả ban ngày lẫn ban đêm.
 
-Một số quốc gia có triển khai vaccine phòng sốt xuất huyết cho những nhóm đối tượng nhất định. Điều kiện sử dụng phụ thuộc vào loại vaccine, độ tuổi, tiền sử mắc bệnh và hướng dẫn tại địa phương. Người có nhu cầu nên trao đổi với cơ sở tiêm chủng hoặc nhân viên y tế để được tư vấn theo khuyến cáo hiện hành.
+Một số quốc gia có triển khai vaccine phòng sốt xuất huyết cho những nhóm đối tượng nhất định. Chỉ định và chống chỉ định phụ thuộc vào loại vaccine, độ tuổi, tình trạng sức khỏe, tiền sử nhiễm Dengue trong một số trường hợp và hướng dẫn tại địa phương. Vaccine không thay thế việc loại bỏ nơi muỗi sinh sản và phòng muỗi đốt. Người có nhu cầu nên trao đổi với cơ sở tiêm chủng hoặc nhân viên y tế để được tư vấn theo khuyến cáo hiện hành.
 
 TÓM TẮT
 
@@ -80,4 +80,14 @@ Sốt xuất huyết Dengue do virus Dengue gây ra và lây truyền chủ yế
 
 Việc chăm sóc, sử dụng thuốc và truyền dịch cần tuân theo hướng dẫn của nhân viên y tế. Phòng bệnh dựa vào tránh muỗi đốt, loại bỏ nước đọng và phối hợp các biện pháp kiểm soát muỗi trong cộng đồng.
 
-Văn bản này được biên soạn để thử chức năng đọc hiểu của chương trình, không phải hồ sơ bệnh án, hướng dẫn điều trị cá nhân hay văn bản chuyên môn chính thức.
+Văn bản này được biên soạn để thử chức năng đọc hiểu của chương trình, không phải hồ sơ bệnh án, hướng dẫn điều trị cá nhân hay văn bản chuyên môn chính thức. Khi sử dụng cho mục đích chăm sóc sức khỏe, cần đối chiếu hướng dẫn hiện hành của Bộ Y tế và đánh giá trực tiếp của nhân viên y tế.
+
+NGUỒN ĐỐI CHIẾU
+
+Tổ chức Y tế Thế giới (WHO), Dengue and severe dengue: https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue
+
+Trung tâm Kiểm soát và Phòng ngừa Dịch bệnh Hoa Kỳ (CDC), Clinical Care of Dengue: https://www.cdc.gov/dengue/hcp/clinical-care/
+
+CDC, Clinical Testing Guidance for Dengue: https://www.cdc.gov/dengue/hcp/diagnosis-testing/
+
+Khi cần áp dụng tại Việt Nam, ưu tiên hướng dẫn chẩn đoán, điều trị và dự phòng sốt xuất huyết Dengue hiện hành của Bộ Y tế.
