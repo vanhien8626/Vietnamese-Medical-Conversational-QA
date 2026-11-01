@@ -213,7 +213,7 @@ python evaluate.py --data data/sample_dataset.json --output report.json
 
 Tệp đầu vào phải là danh sách hội thoại có `context` và danh sách `turns`; mỗi lượt có `question` là chuỗi không rỗng. `answer` chấp nhận một chuỗi hoặc danh sách các đáp án chuẩn không rỗng; EM và F1 lấy điểm tốt nhất trên các đáp án này. Dataset rỗng hoặc sai cấu trúc sẽ báo lỗi. Báo cáo gồm EM/F1, tính nhất quán, số hội thoại/câu hỏi, số lượt không tìm được bằng chứng (`unanswered`), F1 từng hội thoại và từng dự đoán; lệnh từ chối ghi đè tệp có sẵn. Đường dẫn dữ liệu mẫu mặc định không phụ thuộc thư mục đang chạy.
 
-Trên dữ liệu mẫu gồm 2 hội thoại / 5 câu hỏi: EM, F1 và conversation consistency đều đạt 100%. Tập mẫu nhỏ chưa chứng minh chất lượng trên dữ liệu thực tế. Điểm truy xuất là điểm xếp hạng, không phải xác suất đúng.
+Trên dữ liệu mẫu gồm 5 hội thoại / 32 câu hỏi: EM, F1 và conversation consistency đều đạt 100%. Tập mẫu nhỏ, được biên soạn theo đúng cấu trúc truy xuất, chưa chứng minh chất lượng trên dữ liệu thực tế. Điểm truy xuất là điểm xếp hạng, không phải xác suất đúng.
 
 ## Dữ liệu UIT-ViCoQA (tùy chọn)
 

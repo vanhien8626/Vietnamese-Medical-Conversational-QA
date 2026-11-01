@@ -1,19 +1,64 @@
 [
   {
-    "id":"conv_001",
-    "context":"Sốt xuất huyết là bệnh truyền nhiễm do virus Dengue gây ra và lây truyền qua muỗi Aedes. Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn. Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan. Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi.",
-    "turns":[
-      {"question":"Sốt xuất huyết có triệu chứng gì?","answer":"Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn."},
-      {"question":"Bệnh này có nguy hiểm không?","answer":"Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan."},
-      {"question":"Khi nào cần đi khám?","answer":"Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi."}
+    "id": "conv_001",
+    "context": "Sốt xuất huyết là bệnh truyền nhiễm do virus Dengue gây ra. Bệnh lây truyền chủ yếu qua vết đốt của muỗi Aedes mang virus. Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn. Giai đoạn nguy hiểm thường xuất hiện quanh thời điểm người bệnh giảm sốt. Dấu hiệu cảnh báo gồm đau bụng nhiều, nôn dai dẳng, chảy máu niêm mạc, lừ đừ hoặc vật vã. Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan. Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi. Người nghi mắc sốt xuất huyết không nên tự dùng aspirin hoặc ibuprofen vì có thể tăng nguy cơ chảy máu.",
+    "turns": [
+      {"question": "Nguyên nhân gây sốt xuất huyết là gì?", "answer": "Sốt xuất huyết là bệnh truyền nhiễm do virus Dengue gây ra."},
+      {"question": "Muỗi Aedes truyền virus qua cách nào?", "answer": "Bệnh lây truyền chủ yếu qua vết đốt của muỗi Aedes mang virus."},
+      {"question": "Sốt xuất huyết có triệu chứng gì?", "answer": "Triệu chứng thường gặp gồm sốt cao đột ngột, đau đầu, đau mỏi cơ, đau sau hốc mắt và buồn nôn."},
+      {"question": "Giai đoạn nguy hiểm thường xuất hiện khi nào?", "answer": "Giai đoạn nguy hiểm thường xuất hiện quanh thời điểm người bệnh giảm sốt."},
+      {"question": "Dấu hiệu cảnh báo của sốt xuất huyết gồm những gì?", "answer": "Dấu hiệu cảnh báo gồm đau bụng nhiều, nôn dai dẳng, chảy máu niêm mạc, lừ đừ hoặc vật vã."},
+      {"question": "Trường hợp nặng có thể gây sốc hoặc tổn thương gì?", "answer": "Một số trường hợp nặng có thể gây sốc, chảy máu nặng hoặc tổn thương cơ quan."},
+      {"question": "Người có dấu hiệu cảnh báo cần đến đâu?", "answer": "Người có dấu hiệu cảnh báo cần đến cơ sở y tế để được khám và theo dõi."},
+      {"question": "Người nghi mắc sốt xuất huyết cần tránh thuốc nào?", "answer": "Người nghi mắc sốt xuất huyết không nên tự dùng aspirin hoặc ibuprofen vì có thể tăng nguy cơ chảy máu."}
     ]
   },
   {
-    "id":"conv_002",
-    "context":"Cảm cúm thường do virus cúm gây ra. Các triệu chứng có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi. Người bệnh nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng. Nếu khó thở, đau ngực hoặc tình trạng nặng lên, cần liên hệ cơ sở y tế.",
-    "turns":[
-      {"question":"Cảm cúm có triệu chứng gì?","answer":"Các triệu chứng có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi."},
-      {"question":"Người bệnh nên làm gì?","answer":"Người bệnh nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng."}
+    "id": "conv_002",
+    "context": "Cảm cúm thường do virus cúm gây ra. Virus cúm chủ yếu lây qua các giọt và hạt hô hấp khi người nhiễm ho, hắt hơi hoặc nói chuyện. Các triệu chứng có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi. Người bệnh nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng. Nếu khó thở, đau ngực hoặc tình trạng nặng lên, người bệnh cần liên hệ cơ sở y tế. Rửa tay và che miệng khi ho giúp hạn chế lây truyền virus cúm.",
+    "turns": [
+      {"question": "Nguyên nhân gây cảm cúm là gì?", "answer": "Cảm cúm thường do virus cúm gây ra."},
+      {"question": "Virus cúm lây qua các giọt và hạt gì?", "answer": "Virus cúm chủ yếu lây qua các giọt và hạt hô hấp khi người nhiễm ho, hắt hơi hoặc nói chuyện."},
+      {"question": "Cảm cúm có triệu chứng gì?", "answer": "Các triệu chứng có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi."},
+      {"question": "Người bệnh cúm nên làm gì?", "answer": "Người bệnh nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng."},
+      {"question": "Khi nào người bệnh cúm cần liên hệ cơ sở y tế?", "answer": "Nếu khó thở, đau ngực hoặc tình trạng nặng lên, người bệnh cần liên hệ cơ sở y tế."},
+      {"question": "Làm gì để hạn chế lây truyền virus cúm?", "answer": "Rửa tay và che miệng khi ho giúp hạn chế lây truyền virus cúm."}
+    ]
+  },
+  {
+    "id": "conv_003",
+    "context": "Viêm phổi là tình trạng nhiễm trùng tại phổi và có thể do vi khuẩn, virus hoặc nấm gây ra. Triệu chứng của viêm phổi có thể gồm ho, sốt, khó thở và đau ngực khi hít thở hoặc ho. Người cao tuổi, trẻ nhỏ và người có bệnh nền có nguy cơ diễn tiến nặng cao hơn. Bác sĩ chẩn đoán viêm phổi dựa vào triệu chứng, thăm khám và các xét nghiệm phù hợp. Điều trị viêm phổi phụ thuộc vào nguyên nhân và mức độ nặng của bệnh. Tiêm vaccine phù hợp, rửa tay và không hút thuốc giúp giảm nguy cơ mắc một số loại viêm phổi.",
+    "turns": [
+      {"question": "Viêm phổi có thể do tác nhân nào gây ra?", "answer": "Viêm phổi là tình trạng nhiễm trùng tại phổi và có thể do vi khuẩn, virus hoặc nấm gây ra."},
+      {"question": "Viêm phổi có triệu chứng gì?", "answer": "Triệu chứng của viêm phổi có thể gồm ho, sốt, khó thở và đau ngực khi hít thở hoặc ho."},
+      {"question": "Những ai có nguy cơ viêm phổi nặng cao hơn?", "answer": "Người cao tuổi, trẻ nhỏ và người có bệnh nền có nguy cơ diễn tiến nặng cao hơn."},
+      {"question": "Bác sĩ chẩn đoán viêm phổi bằng cách nào?", "answer": "Bác sĩ chẩn đoán viêm phổi dựa vào triệu chứng, thăm khám và các xét nghiệm phù hợp."},
+      {"question": "Điều trị viêm phổi phụ thuộc vào yếu tố nào?", "answer": "Điều trị viêm phổi phụ thuộc vào nguyên nhân và mức độ nặng của bệnh."},
+      {"question": "Phòng ngừa viêm phổi như thế nào?", "answer": "Tiêm vaccine phù hợp, rửa tay và không hút thuốc giúp giảm nguy cơ mắc một số loại viêm phổi."}
+    ]
+  },
+  {
+    "id": "conv_004",
+    "context": "Tăng huyết áp là tình trạng huyết áp duy trì ở mức cao và cần được xác nhận bằng cách đo đúng kỹ thuật. Nhiều người tăng huyết áp không có triệu chứng rõ ràng. Tăng huyết áp không được kiểm soát làm tăng nguy cơ đột quỵ, bệnh tim và tổn thương thận. Giảm lượng muối, vận động phù hợp và duy trì cân nặng khỏe mạnh có thể hỗ trợ kiểm soát huyết áp. Người đã được kê thuốc huyết áp cần dùng thuốc theo chỉ dẫn và không tự ý ngừng thuốc. Theo dõi huyết áp định kỳ giúp đánh giá hiệu quả kiểm soát bệnh.",
+    "turns": [
+      {"question": "Tăng huyết áp là gì?", "answer": "Tăng huyết áp là tình trạng huyết áp duy trì ở mức cao và cần được xác nhận bằng cách đo đúng kỹ thuật."},
+      {"question": "Tăng huyết áp có luôn gây triệu chứng rõ ràng không?", "answer": "Nhiều người tăng huyết áp không có triệu chứng rõ ràng."},
+      {"question": "Tăng huyết áp không kiểm soát làm tăng nguy cơ bệnh gì?", "answer": "Tăng huyết áp không được kiểm soát làm tăng nguy cơ đột quỵ, bệnh tim và tổn thương thận."},
+      {"question": "Thay đổi lối sống nào hỗ trợ kiểm soát huyết áp?", "answer": "Giảm lượng muối, vận động phù hợp và duy trì cân nặng khỏe mạnh có thể hỗ trợ kiểm soát huyết áp."},
+      {"question": "Người dùng thuốc huyết áp cần lưu ý điều gì?", "answer": "Người đã được kê thuốc huyết áp cần dùng thuốc theo chỉ dẫn và không tự ý ngừng thuốc."},
+      {"question": "Vì sao cần theo dõi huyết áp định kỳ?", "answer": "Theo dõi huyết áp định kỳ giúp đánh giá hiệu quả kiểm soát bệnh."}
+    ]
+  },
+  {
+    "id": "conv_005",
+    "context": "Đái tháo đường là bệnh mạn tính xảy ra khi lượng glucose trong máu tăng cao kéo dài. Các triệu chứng có thể gồm khát nhiều, tiểu nhiều, mệt mỏi và sụt cân không chủ ý. Một số người mắc đái tháo đường type 2 có thể trải qua thời gian dài mà không nhận thấy biểu hiện rõ ràng. Bệnh không được kiểm soát có thể ảnh hưởng đến tim, mạch máu, mắt, thận và thần kinh. Xét nghiệm glucose máu và HbA1c là những công cụ thường được sử dụng để đánh giá bệnh. Ăn uống phù hợp, vận động, dùng thuốc theo chỉ định và tái khám giúp kiểm soát đái tháo đường.",
+    "turns": [
+      {"question": "Đái tháo đường là bệnh gì?", "answer": "Đái tháo đường là bệnh mạn tính xảy ra khi lượng glucose trong máu tăng cao kéo dài."},
+      {"question": "Đái tháo đường có triệu chứng gì?", "answer": "Các triệu chứng có thể gồm khát nhiều, tiểu nhiều, mệt mỏi và sụt cân không chủ ý."},
+      {"question": "Đái tháo đường type 2 có luôn biểu hiện rõ không?", "answer": "Một số người mắc đái tháo đường type 2 có thể trải qua thời gian dài mà không nhận thấy biểu hiện rõ ràng."},
+      {"question": "Đái tháo đường không kiểm soát có thể ảnh hưởng cơ quan nào?", "answer": "Bệnh không được kiểm soát có thể ảnh hưởng đến tim, mạch máu, mắt, thận và thần kinh."},
+      {"question": "Xét nghiệm nào thường dùng để đánh giá đái tháo đường?", "answer": "Xét nghiệm glucose máu và HbA1c là những công cụ thường được sử dụng để đánh giá bệnh."},
+      {"question": "Làm thế nào để kiểm soát đái tháo đường?", "answer": "Ăn uống phù hợp, vận động, dùng thuốc theo chỉ định và tái khám giúp kiểm soát đái tháo đường."}
     ]
   }
 ]
