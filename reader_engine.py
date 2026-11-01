@@ -67,6 +67,16 @@ class ReadingModel:
                 raise ValueError
             if document[start:end] != answer:
                 raise ValueError
+            # Some extractive pipelines include adjacent whitespace in the
+            # predicted span. Keep offsets grounded in the original document,
+            # but return the human-readable answer without those separators.
+            left_padding = len(answer) - len(answer.lstrip())
+            right_padding = len(answer) - len(answer.rstrip())
+            start += left_padding
+            end -= right_padding
+            answer = document[start:end]
+            if not answer:
+                raise ValueError
         except (KeyError, TypeError, ValueError):
             raise ReaderError('Mô hình trả kết quả không hợp lệ hoặc vị trí đáp án không khớp tài liệu.') from None
         # Bằng chứng được lấy từ tài liệu gốc, không tạo thêm nội dung.

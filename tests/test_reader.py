@@ -31,6 +31,17 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(reader._qa.call_args.kwargs['doc_stride'], 128)
         self.assertEqual(reader._qa.call_args.kwargs['context'], DOCUMENT)
 
+    def test_answer_trims_boundary_whitespace_and_updates_offsets(self):
+        span = ' nghỉ ngơi '
+        start = DOCUMENT.index('nghỉ ngơi') - 1
+        reader = controlled_reader({'answer': span, 'start': start,
+                                    'end': start + len(span), 'score': 0.8})
+
+        result = reader.answer(DOCUMENT, 'Người bệnh nên làm gì?')
+
+        self.assertEqual(result['answer'], 'nghỉ ngơi')
+        self.assertEqual(DOCUMENT[result['start']:result['end']], 'nghỉ ngơi')
+
     def test_low_score_and_empty_model_answer_abstain(self):
         for output in ({'answer': 'nghỉ ngơi', 'score': 0.01}, {'answer': '', 'score': 0.9}):
             result = controlled_reader(output).answer(DOCUMENT, 'Làm gì?')
