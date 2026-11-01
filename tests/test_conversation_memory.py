@@ -1,0 +1,54 @@
+import io
+import unittest
+from contextlib import redirect_stderr, redirect_stdout
+from unittest.mock import Mock, patch
+
+from conversation_memory import ConversationMemory, infer_topic
+from read_document import main
+
+
+class ConversationMemoryTests(unittest.TestCase):
+    def test_topic_inference_and_reference_rewrite(self):
+        memory = ConversationMemory()
+        first = 'Sốt xuất huyết do virus nào gây ra?'
+        memory.record(first, first, 'Virus Dengue.')
+
+        resolved, used = memory.resolve('Nó lây truyền như thế nào?')
+
+        self.assertTrue(used)
+        self.assertEqual(resolved, 'Sốt xuất huyết lây truyền như thế nào?')
+        self.assertEqual(infer_topic('Viêm phổi có triệu chứng gì?'), 'Viêm phổi')
+
+    def test_clear_and_bounded_history(self):
+        memory = ConversationMemory(max_turns=2)
+        for number in range(3):
+            question = f'Bệnh {number} có nguy hiểm không?'
+            memory.record(question, question, 'Có.')
+        self.assertEqual(len(memory.turns), 2)
+        memory.clear()
+        self.assertEqual(memory.turns, [])
+        self.assertIsNone(memory.topic)
+        self.assertEqual(memory.resolve('Nó là gì?'), ('Nó là gì?', False))
+
+    def test_interactive_reader_uses_resolved_followup_and_commands(self):
+        backend = Mock()
+        backend.answer.side_effect = [
+            {'answer': 'Dengue', 'score': 0.8, 'sources': []},
+            {'answer': 'Qua muỗi Aedes', 'score': 0.7, 'sources': []},
+        ]
+        inputs = iter([
+            'Sốt xuất huyết do virus nào gây ra?',
+            'Nó lây truyền như thế nào?',
+            '/lichsu',
+            '/xoa',
+            '/thoat',
+        ])
+        with patch('read_document.RetrieverReader', return_value=backend), \
+                patch('builtins.input', side_effect=lambda *args: next(inputs)), \
+                redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--sample', '--mode', 'retriever-reader']), 0)
+
+        self.assertEqual(backend.answer.call_args_list[1].args[0],
+                         'Sốt xuất huyết lây truyền như thế nào?')
+        self.assertIn('Hiểu theo ngữ cảnh: Sốt xuất huyết lây truyền như thế nào?', output.getvalue())
+        self.assertIn('Đã xóa lịch sử và chủ đề hội thoại.', output.getvalue())

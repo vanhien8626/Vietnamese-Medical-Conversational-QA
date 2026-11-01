@@ -48,7 +48,7 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
 - `--threshold 0.05` là ngưỡng điểm mặc định; có thể chỉnh trong [0, 1]. Điểm chưa hiệu chỉnh nên không phải độ tin cậy y khoa. Khi mô hình không tìm được đáp án hoặc điểm thấp, chương trình từ chối trả lời.
 - Đây là **trích xuất đoạn trả lời**, không phải LLM tự viết giải thích dài; không đọc PDF/ảnh/URL trực tiếp. Bằng chứng và vị trí được đối chiếu với văn bản gốc.
 
-Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 38 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
+Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 41 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
 
 ## Đọc toàn bộ tài liệu thành tiếng Việt
 
@@ -93,6 +93,14 @@ Trong Terminal Antigravity, từ thư mục dự án đã cài `requirements-rea
 
 Chương trình tự đọc tài liệu mẫu và chờ bạn đặt câu hỏi; không phải dán lại văn bản. Tham số `--sample` xác định tệp theo vị trí chương trình, không phụ thuộc thư mục làm việc. Không dùng cùng `--document`.
 
+Trong chế độ tương tác, chương trình lưu tối đa 5 lượt gần nhất. Nếu câu hỏi mới có
+tham chiếu như `nó`, `bệnh này`, `triệu chứng đó` hoặc `dấu hiệu này`, chương
+trình sẽ thay tham chiếu bằng chủ đề trước rồi mới truy xuất và đọc. Dòng
+`Hiểu theo ngữ cảnh:` cho biết câu hỏi thực tế được gửi vào hệ thống. Dùng
+`/lichsu` để xem lịch sử, `/xoa` để xóa lịch sử và chủ đề, hoặc `/thoat` để
+kết thúc. Đây là bộ nhớ quy tắc ngắn, không phải khả năng hiểu hội thoại tổng quát;
+nếu cách viết lại chưa đúng, hãy hỏi lại bằng câu đầy đủ.
+
 Hoặc hỏi một câu:
 
 ```bash
@@ -132,7 +140,7 @@ Tài liệu → chỉ mục từ khóa/IDF → top-k câu liên quan
 - Nếu không truy xuất được câu nào, không tải/gọi mô hình và không tự quay lại đọc toàn tài liệu. Nếu có bằng chứng nhưng reader không tìm được đáp án, trả lời từ chối riêng.
 - JSON có `passages` (xếp hạng retriever), `contexts` (văn bản reader thực sự nhận), `reason` và `start`/`end` tính trên **tài liệu gốc**, kể cả văn bản Unicode dạng tách dấu.
 - Nếu nhiều ngữ cảnh trả lời được, chọn đáp án có điểm reader cao nhất; điểm giữa các đoạn chưa được hiệu chỉnh. Không cộng hai loại điểm với nhau.
-- Mỗi câu hỏi độc lập; hãy hỏi đầy đủ đối tượng. Retriever hiện là từ khóa/IDF, chưa có embedding, vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không phải RAG sinh văn bản.
+- Câu hỏi tương tác có thể dùng tối đa 5 lượt lịch sử để giải quyết một số tham chiếu rõ ràng. Câu hỏi `--question` chạy một lần vẫn độc lập. Retriever hiện là từ khóa/IDF, chưa có embedding, vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không phải RAG sinh văn bản.
 
 Tài liệu ngắn hoặc `top-k` lớn có thể khiến cửa sổ bao phủ gần hết tài liệu; không đảm bảo luôn nhanh hơn đọc toàn văn. Retriever có thể bỏ sót đoạn chứa đáp án. Các kiểm thử kiểm tra ánh xạ vị trí, Unicode, gộp ngữ cảnh, từ chối và tái sử dụng mô hình; cần đánh giá dữ liệu thật để đo chất lượng toàn hệ thống.
 

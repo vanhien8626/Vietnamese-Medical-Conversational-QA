@@ -10,6 +10,7 @@ from retriever_reader import RetrieverReader
 from speech import SpeechError, create_audio, play_audio
 import uuid
 
+from conversation_memory import ConversationMemory
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Mô hình tự tìm đoạn đáp án trong tài liệu bạn nhập.')
@@ -90,14 +91,24 @@ def main(argv=None):
             print('Đang tải mô hình đọc hiểu…', file=sys.stderr)
             reader = ReadingModel(args.model, device=args.device, local_only=args.local_only)
 
-        def ask(question):
+        memory = ConversationMemory(max_turns=5)
+
+        def ask(question, *, use_memory=False):
+            resolved_question, used_context = memory.resolve(question) if use_memory else (question, False)
             if args.mode == 'retriever-reader':
-                result = reader.answer(question, threshold=args.threshold)
+                result = reader.answer(resolved_question, threshold=args.threshold)
             else:
-                result = reader.answer(document, question, threshold=args.threshold)
+                result = reader.answer(document, resolved_question, threshold=args.threshold)
+            if use_memory:
+                memory.record(question, resolved_question, result['answer'])
+            if used_context:
+                result = {**result, 'original_question': question,
+                          'resolved_question': resolved_question, 'used_history': True}
             if args.json:
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             else:
+                if used_context:
+                    print('Hiểu theo ngữ cảnh:', resolved_question)
                 print('Trả lời:', result['answer'])
                 for source in result['sources']:
                     print('Bằng chứng:', source)
@@ -106,7 +117,7 @@ def main(argv=None):
         if args.question is not None:
             ask(args.question)
             return 0
-        print('Nhập câu hỏi đầy đủ · /thoat để dừng. Mỗi câu được xử lý độc lập.')
+        print('Hỏi đáp có ngữ cảnh · /trogiup để xem lệnh.')
         while True:
             try:
                 question = input('Bạn: ').strip()
@@ -114,8 +125,21 @@ def main(argv=None):
                 break
             if question == '/thoat':
                 break
+            if question == '/trogiup':
+                print('/thoat: kết thúc · /xoa: xóa ngữ cảnh · /lichsu: xem lịch sử')
+                continue
+            if question == '/xoa':
+                memory.clear()
+                print('Đã xóa lịch sử và chủ đề hội thoại.')
+                continue
+            if question == '/lichsu':
+                if not memory.turns:
+                    print('Chưa có lượt hỏi đáp nào.')
+                for number, turn in enumerate(memory.turns, 1):
+                    print(f"{number}. {turn['question']}\n   {turn['answer']}")
+                continue
             if question:
-                ask(question)
+                ask(question, use_memory=True)
         return 0
     except KeyboardInterrupt:
         print('\nĐã dừng.', file=sys.stderr)
