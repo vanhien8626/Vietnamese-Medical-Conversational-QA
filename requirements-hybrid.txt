@@ -1,0 +1,4 @@
+# Optional semantic retrieval on top of BM25.
+-r requirements-reader.txt
+sentence-transformers>=3,<6
+

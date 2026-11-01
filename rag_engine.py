@@ -1,4 +1,4 @@
-"""Truy xuất câu bằng từ khóa và IDF, chỉ dùng thư viện chuẩn Python."""
+"""Truy xuất câu bằng BM25, chỉ dùng thư viện chuẩn Python."""
 import math
 import re
 import unicodedata
@@ -18,6 +18,7 @@ INTENTS = {
     'nguy hiểm': {'nặng', 'sốc', 'biến', 'chứng', 'tử', 'vong', 'nguy', 'hiểm'},
     'nguyên nhân': {'do', 'virus', 'vi', 'khuẩn', 'nguyên', 'nhân'},
     'phòng ngừa': {'phòng', 'ngừa', 'tránh', 'tiêm', 'vắc'},
+    'tránh thuốc': {'thuốc', 'dùng', 'aspirin', 'ibuprofen', 'chống', 'viêm'},
 }
 FALLBACK = 'Không tìm thấy thông tin phù hợp trong văn bản đã cung cấp.'
 
@@ -43,19 +44,39 @@ def _contains_phrase(text, phrase):
     return re.search(r'(?<!\w)' + re.escape(phrase) + r'(?!\w)', text) is not None
 
 
-class DocumentIndex:
-    """Lập chỉ mục một lần cho nhiều câu hỏi trên cùng tài liệu."""
+def _is_non_content(text):
+    """Loại tiêu đề và dòng tài liệu tham khảo khỏi ứng viên trả lời."""
+    if 'http://' in text.lower() or 'https://' in text.lower():
+        return True
+    letters = [character for character in text if character.isalpha()]
+    return bool(letters) and len(text.split()) <= 16 and all(
+        character.isupper() for character in letters)
 
-    def __init__(self, document):
+
+class DocumentIndex:
+    """Lập chỉ mục BM25 một lần cho nhiều câu hỏi trên cùng tài liệu."""
+
+    def __init__(self, document, *, k1=1.5, b=0.75):
+        if not math.isfinite(k1) or k1 <= 0:
+            raise ValueError('k1 phải là số hữu hạn dương.')
+        if not math.isfinite(b) or not 0 <= b <= 1:
+            raise ValueError('b phải nằm trong [0, 1].')
         self.document = normalize_text(document).strip()
         self.sentences = tuple(tach_cau(self.document))
-        self.tokens = tuple(frozenset(tach_tu(sentence)) for sentence in self.sentences)
+        self._term_counts = tuple(Counter(tach_tu(sentence)) for sentence in self.sentences)
+        self.tokens = tuple(frozenset(counts) for counts in self._term_counts)
+        self._lengths = tuple(sum(counts.values()) for counts in self._term_counts)
+        self._average_length = (
+            sum(self._lengths) / len(self._lengths) if self._lengths else 0
+        )
+        self.k1 = k1
+        self.b = b
         frequencies = Counter(token for tokens in self.tokens for token in tokens)
         self._weights = {
-            token: math.log(1 + (len(self.sentences) + 1) / (count + 1))
+            token: math.log(1 + (len(self.sentences) - count + 0.5) / (count + 0.5))
             for token, count in frequencies.items()
         }
-        self._unknown_weight = math.log(1 + len(self.sentences) + 1)
+        self._unknown_weight = math.log(1 + (len(self.sentences) + 0.5) / 0.5)
         self._lower_sentences = tuple(sentence.lower() for sentence in self.sentences)
         self._postings = defaultdict(set)
         for position, tokens in enumerate(self.tokens):
@@ -79,6 +100,14 @@ class DocumentIndex:
             return []
         active_intents = [phrase for phrase in INTENTS if _contains_phrase(question_lower, phrase)]
         expansion = set().union(*(INTENTS[phrase] for phrase in active_intents))
+        subject = query - expansion if active_intents else set()
+        asks_definition = _contains_phrase(question_lower, 'là gì')
+        asks_transmission_route = (
+            'truyền' in query
+            and any(token in query for token in ('qua', 'cách', 'đường'))
+        )
+        if asks_definition:
+            subject = query
         previous = set()
         if history and any(_contains_phrase(question_lower, phrase) for phrase in REFERENCE_WORDS):
             previous = set(tach_tu(history[-1].get('question', '')))
@@ -88,16 +117,50 @@ class DocumentIndex:
         candidates = set().union(*(self._postings.get(token, ()) for token in query | expansion))
         for position in sorted(candidates):
             sentence, tokens = self.sentences[position], self.tokens[position]
+            if _is_non_content(sentence):
+                continue
             overlap = tokens & query
-            direct = sum(self._weights[token] for token in overlap) / denominator
+            length_norm = 1 - self.b
+            if self._average_length:
+                length_norm += self.b * self._lengths[position] / self._average_length
+            bm25 = sum(
+                self._weights[token]
+                * self._term_counts[position][token] * (self.k1 + 1)
+                / (self._term_counts[position][token] + self.k1 * length_norm)
+                for token in overlap
+            )
+            direct = bm25 / denominator
             intent = min(1, len(tokens & expansion) / 2) if expansion else 0
+            subject_match = len(tokens & subject) / len(subject) if subject else 0
             context = len(tokens & previous) / len(previous) if previous else 0
             phrase_bonus = 0.2 if any(position in self._intent_positions[phrase] for phrase in active_intents) else 0
-            score = 0.7 * direct + 0.5 * intent + phrase_bonus
+            list_bonus = 0.6 if (
+                'triệu chứng' in active_intents
+                and re.search(r'\b(?:gồm|bao gồm)\b', self._lower_sentences[position])
+            ) else 0
+            definition_bonus = 0.6 if (
+                asks_definition and subject
+                and subject.issubset(tokens)
+                and _contains_phrase(self._lower_sentences[position], 'là')
+            ) else 0
+            transmission_bonus = 0.6 if (
+                asks_transmission_route
+                and {'vết', 'đốt'} <= tokens
+            ) else 0
+            score = (
+                0.7 * direct + 0.5 * intent + phrase_bonus
+                + 0.6 * subject_match + list_bonus + definition_bonus
+                + transmission_bonus
+            )
             if overlap or intent:
                 score += 0.05 * context
             if score > 0 and score >= threshold:
-                ranked.append({'text': sentence, 'score': score, 'sentence_index': position})
+                ranked.append({
+                    'text': sentence,
+                    'score': score,
+                    'bm25_score': bm25,
+                    'sentence_index': position,
+                })
         return sorted(ranked, key=lambda item: item['score'], reverse=True)[:top_k]
 
     def answer(self, question, history=None, *, threshold=0.15):

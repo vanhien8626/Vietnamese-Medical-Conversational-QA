@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from reader_engine import DEFAULT_MODEL, ReaderError, ReadingModel
+from hybrid_retriever import DEFAULT_SEMANTIC_MODEL, SemanticEncoderError
 from retriever_reader import RetrieverReader
 from speech import SpeechError, create_audio, play_audio
 import uuid
@@ -16,7 +17,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Mô hình tự tìm đoạn đáp án trong tài liệu bạn nhập.')
     source = parser.add_mutually_exclusive_group()
     source.add_argument('--document', type=Path, help='Đường dẫn tệp văn bản UTF-8.')
-    source.add_argument('--sample', action='store_true', help='Dùng văn bản dài mẫu về sốt xuất huyết đi kèm dự án.')
+    source.add_argument('--sample', action='store_true',
+                        help='Dùng văn bản y tế mẫu nhiều chủ đề đi kèm dự án.')
     parser.add_argument('--question', help='Hỏi một câu rồi thoát; nếu bỏ trống sẽ chat tương tác.')
     parser.add_argument('--json', action='store_true', help='Xuất JSON khi dùng --question.')
     parser.add_argument('--model', default=DEFAULT_MODEL, help='Tên trên Hugging Face hoặc thư mục mô hình.')
@@ -28,6 +30,12 @@ def main(argv=None):
                         help='Đọc toàn tài liệu hoặc truy xuất trước rồi đọc (mặc định reader).')
     parser.add_argument('--top-k', type=int, default=3, help='Số câu truy xuất trong chế độ retriever-reader.')
     parser.add_argument('--retrieval-threshold', type=float, default=0.15)
+    parser.add_argument('--retriever', choices=('bm25', 'hybrid'), default='bm25',
+                        help='BM25 nhẹ hoặc BM25 + Sentence-BERT (mặc định bm25).')
+    parser.add_argument('--semantic-model', default=DEFAULT_SEMANTIC_MODEL,
+                        help='Mô hình Sentence-BERT dùng khi --retriever hybrid.')
+    parser.add_argument('--semantic-weight', type=float, default=0.35,
+                        help='Trọng số ngữ nghĩa trong [0, 1] (mặc định 0.35).')
     parser.add_argument('--context-sentences', type=int, default=1,
                         help='Số câu lân cận mỗi phía để giữ ngữ cảnh.')
     parser.add_argument('--read-aloud', action='store_true', help='Đọc toàn bộ tài liệu thành tiếng trước khi hỏi đáp (Windows).')
@@ -47,6 +55,8 @@ def main(argv=None):
         parser.error('--top-k phải dương; --context-sentences phải không âm.')
     if not math.isfinite(args.retrieval_threshold) or args.retrieval_threshold < 0:
         parser.error('--retrieval-threshold phải là số hữu hạn không âm.')
+    if not math.isfinite(args.semantic_weight) or not 0 <= args.semantic_weight <= 1:
+        parser.error('--semantic-weight phải nằm trong [0, 1].')
     if args.json and args.question is None:
         parser.error('--json cần đi kèm --question.')
     if not math.isfinite(args.threshold) or not 0 <= args.threshold <= 1:
@@ -86,7 +96,10 @@ def main(argv=None):
             reader = RetrieverReader(document, model=args.model, device=args.device,
                                      local_only=args.local_only, top_k=args.top_k,
                                      retrieval_threshold=args.retrieval_threshold,
-                                     context_sentences=args.context_sentences)
+                                     context_sentences=args.context_sentences,
+                                     retriever=args.retriever,
+                                     semantic_model=args.semantic_model,
+                                     semantic_weight=args.semantic_weight)
             print('Đã lập chỉ mục. Mô hình sẽ tải khi tìm được đoạn liên quan.', file=sys.stderr)
         else:
             print('Đang tải mô hình đọc hiểu…', file=sys.stderr)
@@ -154,7 +167,8 @@ def main(argv=None):
     except KeyboardInterrupt:
         print('\nĐã dừng.', file=sys.stderr)
         return 130
-    except (OSError, UnicodeError, ReaderError, SpeechError, ValueError) as exc:
+    except (OSError, UnicodeError, ReaderError, SemanticEncoderError,
+            SpeechError, ValueError) as exc:
         print(f'Lỗi: {exc}', file=sys.stderr)
         return 1
 

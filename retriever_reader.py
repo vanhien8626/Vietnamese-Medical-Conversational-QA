@@ -3,6 +3,7 @@ import math
 import re
 
 from rag_engine import DocumentIndex, FALLBACK
+from hybrid_retriever import DEFAULT_SEMANTIC_MODEL, HybridDocumentIndex
 from reader_engine import DEFAULT_MODEL, NO_ANSWER, ReaderError, ReadingModel
 
 
@@ -63,7 +64,9 @@ class RetrieverReader:
     """
 
     def __init__(self, document, *, reader=None, model=DEFAULT_MODEL, device='cpu',
-                 local_only=False, top_k=3, retrieval_threshold=0.15, context_sentences=1):
+                 local_only=False, top_k=3, retrieval_threshold=0.15, context_sentences=1,
+                 retriever='bm25', semantic_model=DEFAULT_SEMANTIC_MODEL,
+                 semantic_weight=0.35, semantic_encoder=None):
         if type(top_k) is not int or top_k < 1:
             raise ValueError('top_k phải là số nguyên dương.')
         if type(context_sentences) is not int or context_sentences < 0:
@@ -72,8 +75,21 @@ class RetrieverReader:
             raise ValueError('retrieval_threshold phải là số hữu hạn không âm.')
         if not document.strip():
             raise ValueError('Tài liệu không được để trống.')
+        if retriever not in ('bm25', 'hybrid'):
+            raise ValueError('retriever phải là bm25 hoặc hybrid.')
         self.document = document
-        self.index = DocumentIndex(document)
+        if retriever == 'hybrid':
+            self.index = HybridDocumentIndex(
+                document,
+                semantic_model=semantic_model,
+                semantic_weight=semantic_weight,
+                device=device,
+                local_only=local_only,
+                encoder=semantic_encoder,
+            )
+        else:
+            self.index = DocumentIndex(document)
+        self.retriever = retriever
         self.spans = sentence_spans(document)
         if len(self.spans) != len(self.index.sentences):
             raise ValueError('Không ánh xạ được câu truy xuất sang tài liệu gốc.')
@@ -92,7 +108,7 @@ class RetrieverReader:
         result = {'answer': FALLBACK, 'score': 0, 'sources': [], 'start': None, 'end': None,
                   'mode': 'retriever-reader', 'passages': passages, 'contexts': [],
                   'model': self.reader_options['model'], 'reason': 'no_retrieval_match',
-                  'score_type': None}
+                  'score_type': None, 'retriever': self.retriever}
         if not passages:
             return result  # Do not load a model or silently read the whole document.
         intervals = sorted((max(0, p['sentence_index'] - self.context_sentences),
@@ -146,7 +162,7 @@ class RetrieverReader:
         else:
             fallback = next((
                 passage for passage in passages
-                if passage['score'] >= 0.4 and not _is_heading(passage['text'])
+                if passage['score'] >= 0.3 and not _is_heading(passage['text'])
             ), None)
             if fallback:
                 start, end = self.spans[fallback['sentence_index']]

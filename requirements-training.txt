@@ -1,0 +1,5 @@
+# Optional training stack. A CUDA-enabled PyTorch installation is recommended.
+-r requirements-reader.txt
+accelerate>=1,<2
+
+

@@ -53,7 +53,7 @@ python read_document.py --document tai_lieu.txt --question "Bệnh này do tác 
   trong một câu liệt kê rõ bằng `gồm` hoặc `bao gồm`, chương trình mở rộng đáp án
   thành nguyên câu trong tài liệu để tránh chỉ hiển thị mục đầu tiên.
 
-Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 45 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất cũ, không thuộc chế độ mô hình mới.
+Trạng thái kiểm chứng: đã chạy mô hình thật `deepset/xlm-roberta-base-squad2` trên CPU với một đoạn văn tiếng Việt mới. Mô hình trích đúng tác nhân Dengue, muỗi Aedes và nhóm triệu chứng; từ chối một câu hỏi về thủ đô Pháp không có trong tài liệu. Đây chỉ là smoke test 4 câu, chưa phải đánh giá trên tập test y tế đại diện. Đã bổ sung dependency `protobuf` mà tokenizer XLM-R cần khi chuyển sang fast tokenizer. Đã kiểm chứng CLI `--local-only` đọc từ cache và trả lời được mà không cần kết nối mạng; chế độ này giải quyết tên mô hình thành thư mục cache trước khi khởi tạo pipeline. Bộ kiểm thử mặc định gồm 52 ca; các ca kiểm thử mô hình trong đó dùng phản hồi kiểm soát. Kết quả 100% của `evaluate.py` bên dưới chỉ thuộc bộ truy xuất BM25 trên tập mẫu, không phải đánh giá độc lập của mô hình neural.
 
 ## Đọc toàn bộ tài liệu thành tiếng Việt
 
@@ -86,9 +86,13 @@ Cần cài cả `requirements-reader.txt` cho phần hỏi đáp. Chương trìn
 
 Kiểm chứng: đã kiểm thử đầy đủ việc chuyển nguyên văn, thứ tự đọc trước khi hỏi đáp, lưu tệp và xử lý lỗi bằng phản hồi kiểm soát. Máy cloud hiện chặn dịch vụ `speech.platform.bing.com`, nên chưa tạo được MP3 thật và chưa kiểm chứng phát loa trên Windows. Nếu báo lỗi mạng, kiểm tra kết nối dịch vụ TTS; không tắt kiểm tra TLS.
 
-## Dùng ngay văn bản dài về sốt xuất huyết
+## Dùng ngay văn bản y tế mẫu
 
-Văn bản đã trao đổi trong hướng dẫn được lưu đầy đủ tại `data/dengue_document.txt`. Dòng điều khiển `/xong` không nằm trong tệp vì khi đọc tệp không cần dán tương tác.
+Văn bản đã trao đổi trong hướng dẫn được lưu đầy đủ tại
+`data/dengue_document.txt`. Ngoài phần chi tiết về sốt xuất huyết, tệp có các
+đoạn tham khảo ngắn về cảm cúm, viêm phổi, tăng huyết áp và đái tháo đường để
+32 câu hỏi trong bộ đánh giá cũng có dữ kiện khi chạy `--sample`. Dòng điều
+khiển `/xong` không nằm trong tệp vì khi đọc tệp không cần dán tương tác.
 
 Trong Terminal Antigravity, từ thư mục dự án đã cài `requirements-reader.txt`, chạy:
 
@@ -134,22 +138,45 @@ Sau khi đã tải mô hình, thêm `--local-only` để chạy ngoại tuyến.
 Luồng xử lý:
 
 ```text
-Tài liệu → chỉ mục từ khóa/IDF → top-k câu liên quan
+Tài liệu → chỉ mục BM25 → top-k câu liên quan
          → thêm câu lân cận, gộp cửa sổ trùng → mô hình đọc hiểu → đáp án + nguồn
 ```
 
 - `--top-k`: số câu được retriever chọn (mặc định 3).
-- `--retrieval-threshold`: ngưỡng từ khóa/IDF (mặc định 0.15).
+- `--retriever bm25`: truy xuất nhẹ, không cần mô hình embedding.
+- `--retriever hybrid`: kết hợp BM25 và Sentence-BERT; cài
+  `requirements-hybrid.txt`. Dùng `--semantic-weight` để chỉnh tỉ trọng ngữ
+  nghĩa và `--semantic-model` để chọn mô hình embedding.
+
+Cài và chạy hybrid:
+
+```bash
+python -m pip install -r requirements-hybrid.txt
+python read_document.py --sample --mode retriever-reader --retriever hybrid
+```
+
+Lần đầu cần tải thêm mô hình
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Thuật toán kết
+hợp và xử lý lỗi đã được kiểm thử bằng encoder kiểm soát; môi trường cloud hiện
+chặn tải trọng số Sentence-BERT từ Hugging Face nên chưa có benchmark neural thật
+cho chế độ hybrid. Không xem kết quả BM25 100% bên dưới là kết quả của hybrid.
+- `--retrieval-threshold`: ngưỡng truy xuất BM25/hybrid (mặc định 0.15).
 - `--context-sentences`: số câu lân cận mỗi phía (mặc định 1); đặt 0 nếu chỉ muốn đọc đúng các câu được chọn.
 - `--threshold`: ngưỡng điểm mô hình đọc hiểu (mặc định 0.20), độc lập với điểm truy xuất.
 - Nếu không truy xuất được câu nào, không tải/gọi mô hình và không tự quay lại đọc toàn tài liệu. Nếu có bằng chứng nhưng reader không tìm được đáp án, trả lời từ chối riêng.
+- Retriever bỏ qua tiêu đề và các dòng URL/tài liệu tham khảo khi chọn câu trả lời,
+  đồng thời ưu tiên câu khớp đúng chủ đề bệnh thay vì chỉ khớp loại câu hỏi.
 - Nếu reader từ chối nhưng Retriever tìm được một câu nguồn không phải tiêu đề với
-  điểm truy xuất từ 0.4, chương trình trả nguyên câu đó và ghi
+  điểm truy xuất từ 0.3, chương trình trả nguyên câu đó và ghi
   `Cách trả lời: truy xuất nguyên câu`. Kết quả này dùng điểm truy xuất, không
   giả làm điểm mô hình. Nếu bằng chứng truy xuất cũng yếu, chương trình vẫn từ chối.
 - JSON có `passages` (xếp hạng retriever), `contexts` (văn bản reader thực sự nhận), `reason` và `start`/`end` tính trên **tài liệu gốc**, kể cả văn bản Unicode dạng tách dấu.
 - Nếu nhiều ngữ cảnh trả lời được, chọn đáp án có điểm reader cao nhất; điểm giữa các đoạn chưa được hiệu chỉnh. Không cộng hai loại điểm với nhau.
-- Câu hỏi tương tác có thể dùng tối đa 5 lượt lịch sử để giải quyết một số tham chiếu rõ ràng. Câu hỏi `--question` chạy một lần vẫn độc lập. Retriever hiện là từ khóa/IDF, chưa có embedding, vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không phải RAG sinh văn bản.
+- Câu hỏi tương tác có thể dùng tối đa 5 lượt lịch sử để giải quyết một số tham
+  chiếu rõ ràng. Câu hỏi `--question` chạy một lần vẫn độc lập. Retriever mặc
+  định là BM25; chế độ hybrid bổ sung embedding Sentence-BERT nhưng chưa dùng
+  vector database hay mô hình sinh. Đây là retriever–reader trích xuất, không
+  phải RAG sinh văn bản.
 
 Tài liệu ngắn hoặc `top-k` lớn có thể khiến cửa sổ bao phủ gần hết tài liệu; không đảm bảo luôn nhanh hơn đọc toàn văn. Retriever có thể bỏ sót đoạn chứa đáp án. Các kiểm thử kiểm tra ánh xạ vị trí, Unicode, gộp ngữ cảnh, từ chối và tái sử dụng mô hình; cần đánh giá dữ liệu thật để đo chất lượng toàn hệ thống.
 
@@ -199,7 +226,8 @@ print(ket_qua["answer"])
 
 Truyền danh sách `history` gồm các mục `question` và `answer` khi cần ngữ cảnh hội thoại. Bắt đầu danh sách mới khi đổi tài liệu.
 
-Với nhiều câu hỏi trên cùng tài liệu, dùng chỉ mục tái sử dụng để tránh tách câu và tính IDF nhiều lần:
+Với nhiều câu hỏi trên cùng tài liệu, dùng chỉ mục tái sử dụng để tránh tách câu
+và tính thống kê BM25 nhiều lần:
 
 ```python
 from rag_engine import DocumentIndex
@@ -215,7 +243,11 @@ Chỉ mục đảo ánh xạ từ khóa sang câu, giúp chỉ chấm các câu 
 
 ## Truy xuất và đánh giá
 
-`rag_engine.py` tách câu, chuẩn hóa từ và loại từ dừng; xếp hạng bằng IDF, mức khớp từ khóa và mở rộng ý định câu hỏi. Lịch sử chỉ hỗ trợ xếp hạng khi có tham chiếu. Nếu điểm thấp hơn ngưỡng, hệ thống thông báo không tìm thấy thông tin phù hợp.
+`rag_engine.py` tách câu, chuẩn hóa từ và loại từ dừng; xếp hạng bằng BM25,
+mức khớp chủ đề và mở rộng ý định câu hỏi. BM25 điều chỉnh cả tần suất từ lẫn
+độ dài câu, nên ổn định hơn phép phủ IDF trước đây. Lịch sử chỉ hỗ trợ xếp hạng
+khi có tham chiếu. Nếu điểm thấp hơn ngưỡng, hệ thống thông báo không tìm thấy
+thông tin phù hợp.
 
 ```bash
 python -m unittest discover -s tests -v
@@ -241,12 +273,46 @@ pip install 'datasets>=3.0.0'
 python dataset_loader.py --output data/vicoqa
 ```
 
+## Fine-tune XLM-RoBERTa
+
+`train_reader.py` nhận JSONL theo định dạng extractive QA: mỗi dòng có
+`question`, `context`, `answers.text`, `answers.answer_start` và có thể có
+`history` gồm các cặp `question`/`answer`. Script tạo cửa sổ token chồng
+lấn, ánh xạ nhãn start/end và ghép tối đa 5 lượt gần nhất vào câu hỏi.
+
+```bash
+python -m pip install -r requirements-training.txt
+python train_reader.py \
+  --train-file data/vicoqa/train.jsonl \
+  --validation-file data/vicoqa/validation.jsonl \
+  --output models/xlm-r-vicoqa
+```
+
+Sau khi huấn luyện, chạy:
+
+```bash
+python read_document.py --sample --mode retriever-reader \
+  --model models/xlm-r-vicoqa
+```
+
+UIT-ViCoQA yêu cầu quyền truy cập; nên dùng GPU và đánh giá trên test độc lập.
+Dự án không công bố chỉ số fine-tune khi chưa hoàn thành lần chạy thật.
+Tệp `data/training_example.jsonl` chỉ dùng để kiểm tra định dạng và đường chạy,
+không đủ để tạo mô hình có chất lượng.
+
+Đã chạy smoke test fine-tune một bước trên CPU bằng hai mẫu minh họa, lưu
+checkpoint rồi tải lại checkpoint đó trong `read_document.py`; mô hình trích
+được `virus Dengue`. Kết quả này chỉ xác nhận pipeline kỹ thuật hoạt động,
+không phải phép đo chất lượng hoặc bằng chứng mô hình đã được fine-tune đủ.
+
 ## Cấu trúc chính
 
 - `chat.py`: hỏi đáp dòng lệnh bằng từ khóa, hỗ trợ tương tác và JSON.
 - `retriever_reader.py`: nối truy xuất với mô hình đọc hiểu, ánh xạ đáp án về văn bản gốc.
+- `hybrid_retriever.py`: kết hợp BM25 với Sentence-BERT khi bật chế độ hybrid.
 - `read_document.py`, `reader_engine.py`: chế độ mô hình đọc hiểu; cài gói tùy chọn trong `requirements-reader.txt`.
-- `rag_engine.py`: chỉ mục tài liệu, chuẩn hóa Unicode và truy xuất bằng chứng.
+- `rag_engine.py`: chỉ mục BM25, chuẩn hóa Unicode và truy xuất bằng chứng.
+- `train_reader.py`: fine-tune mô hình QA với nhãn start/end và lịch sử hội thoại.
 - `evaluate.py`: đánh giá EM, F1 và tính nhất quán hội thoại.
 - `tests/`: kiểm thử truy xuất, Unicode, lịch sử, dòng lệnh, dữ liệu lỗi và báo cáo.
 

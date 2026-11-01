@@ -46,6 +46,45 @@ class IndexTests(unittest.TestCase):
         for top_k in (0, -1, True, 1.5):
             with self.assertRaises(ValueError):
                 index.search('Nghỉ ngơi?', top_k=top_k)
+        for options in ({'k1': 0}, {'k1': float('nan')}, {'b': -0.1}, {'b': 1.1}):
+            with self.assertRaises(ValueError):
+                DocumentIndex('Tài liệu.', **options)
+
+    def test_bm25_length_normalization_prefers_focused_sentence(self):
+        index = DocumentIndex(
+            'Sốt cao. '
+            'Sốt là một biểu hiện được nhắc đến trong câu rất dài có nhiều từ không liên quan.'
+        )
+        matches = index.search('Sốt?', top_k=2, threshold=0)
+
+        self.assertEqual(matches[0]['text'], 'Sốt cao.')
+        self.assertIn('bm25_score', matches[0])
+
+    def test_subject_match_beats_unrelated_intent_and_reference_url(self):
+        index = DocumentIndex(
+            'Điều trị viêm phổi phụ thuộc vào nguyên nhân. '
+            'Sốt xuất huyết do virus Dengue gây ra. '
+            'CDC, Phòng ngừa: https://example.com/reference'
+        )
+        result = index.search('Nguyên nhân gây sốt xuất huyết là gì?', top_k=3)
+
+        self.assertEqual(result[0]['text'], 'Sốt xuất huyết do virus Dengue gây ra.')
+        self.assertFalse(any('https://' in item['text'] for item in result))
+
+    def test_route_and_avoid_medicine_queries_rank_actionable_sentence(self):
+        document = (
+            'Muỗi Aedes có thể truyền virus. '
+            'Bệnh lây qua vết đốt của muỗi Aedes. '
+            'Giảm tiểu cầu có thể gặp ở người mắc bệnh. '
+            'Không tự dùng aspirin hoặc ibuprofen khi nghi mắc bệnh.'
+        )
+        index = DocumentIndex(document)
+
+        route = index.search('Muỗi Aedes truyền virus qua cách nào?', top_k=1)
+        medicine = index.search('Người nghi mắc bệnh cần tránh thuốc nào?', top_k=1)
+
+        self.assertEqual(route[0]['text'], 'Bệnh lây qua vết đốt của muỗi Aedes.')
+        self.assertIn('aspirin hoặc ibuprofen', medicine[0]['text'])
 
     def test_evaluation_rejects_empty_and_malformed_data(self):
         for data in ([], {}, [None], [{'context': 'a', 'turns': []}],

@@ -80,6 +80,24 @@ Sốt xuất huyết Dengue do virus Dengue gây ra và lây truyền chủ yế
 
 Việc chăm sóc, sử dụng thuốc và truyền dịch cần tuân theo hướng dẫn của nhân viên y tế. Phòng bệnh dựa vào tránh muỗi đốt, loại bỏ nước đọng và phối hợp các biện pháp kiểm soát muỗi trong cộng đồng.
 
+THÔNG TIN Y TẾ MẪU VỀ CÁC CHỦ ĐỀ KHÁC
+
+CẢM CÚM
+
+Cảm cúm thường do virus cúm gây ra. Virus cúm chủ yếu lây qua các giọt và hạt hô hấp khi người nhiễm ho, hắt hơi hoặc nói chuyện. Các triệu chứng của cảm cúm có thể gồm sốt, ho, đau họng, đau cơ và mệt mỏi. Người bệnh cúm nên nghỉ ngơi, uống đủ nước và theo dõi triệu chứng. Nếu khó thở, đau ngực hoặc tình trạng nặng lên, người bệnh cúm cần liên hệ cơ sở y tế. Rửa tay và che miệng khi ho giúp hạn chế lây truyền virus cúm.
+
+VIÊM PHỔI
+
+Viêm phổi là tình trạng nhiễm trùng tại phổi và có thể do vi khuẩn, virus hoặc nấm gây ra. Triệu chứng của viêm phổi có thể gồm ho, sốt, khó thở và đau ngực khi hít thở hoặc ho. Người cao tuổi, trẻ nhỏ và người có bệnh nền có nguy cơ viêm phổi diễn tiến nặng cao hơn. Bác sĩ chẩn đoán viêm phổi dựa vào triệu chứng, thăm khám và các xét nghiệm phù hợp. Điều trị viêm phổi phụ thuộc vào nguyên nhân và mức độ nặng của bệnh. Tiêm vaccine phù hợp, rửa tay và không hút thuốc giúp giảm nguy cơ mắc một số loại viêm phổi.
+
+TĂNG HUYẾT ÁP
+
+Tăng huyết áp là tình trạng huyết áp duy trì ở mức cao và cần được xác nhận bằng cách đo đúng kỹ thuật. Nhiều người tăng huyết áp không có triệu chứng rõ ràng. Tăng huyết áp không được kiểm soát làm tăng nguy cơ đột quỵ, bệnh tim và tổn thương thận. Giảm lượng muối, vận động phù hợp và duy trì cân nặng khỏe mạnh có thể hỗ trợ kiểm soát huyết áp. Người đã được kê thuốc huyết áp cần dùng thuốc theo chỉ dẫn và không tự ý ngừng thuốc. Theo dõi huyết áp định kỳ giúp đánh giá hiệu quả kiểm soát bệnh.
+
+ĐÁI THÁO ĐƯỜNG
+
+Đái tháo đường là bệnh mạn tính xảy ra khi lượng glucose trong máu tăng cao kéo dài. Các triệu chứng của đái tháo đường có thể gồm khát nhiều, tiểu nhiều, mệt mỏi và sụt cân không chủ ý. Một số người mắc đái tháo đường type 2 có thể trải qua thời gian dài mà không nhận thấy biểu hiện rõ ràng. Đái tháo đường không được kiểm soát có thể ảnh hưởng đến tim, mạch máu, mắt, thận và thần kinh. Xét nghiệm glucose máu và HbA1c là những công cụ thường được sử dụng để đánh giá đái tháo đường. Ăn uống phù hợp, vận động, dùng thuốc theo chỉ định và tái khám giúp kiểm soát đái tháo đường.
+
 Văn bản này được biên soạn để thử chức năng đọc hiểu của chương trình, không phải hồ sơ bệnh án, hướng dẫn điều trị cá nhân hay văn bản chuyên môn chính thức. Khi sử dụng cho mục đích chăm sóc sức khỏe, cần đối chiếu hướng dẫn hiện hành của Bộ Y tế và đánh giá trực tiếp của nhân viên y tế.
 
 NGUỒN ĐỐI CHIẾU
@@ -89,5 +107,13 @@ Tổ chức Y tế Thế giới (WHO), Dengue and severe dengue: https://www.who
 Trung tâm Kiểm soát và Phòng ngừa Dịch bệnh Hoa Kỳ (CDC), Clinical Care of Dengue: https://www.cdc.gov/dengue/hcp/clinical-care/
 
 CDC, Clinical Testing Guidance for Dengue: https://www.cdc.gov/dengue/hcp/diagnosis-testing/
+
+WHO, Influenza (seasonal): https://www.who.int/news-room/fact-sheets/detail/influenza-(seasonal)
+
+WHO, Pneumonia in children: https://www.who.int/news-room/fact-sheets/detail/pneumonia
+
+WHO, Hypertension: https://www.who.int/news-room/fact-sheets/detail/hypertension
+
+WHO, Diabetes: https://www.who.int/news-room/fact-sheets/detail/diabetes
 
 Khi cần áp dụng tại Việt Nam, ưu tiên hướng dẫn chẩn đoán, điều trị và dự phòng sốt xuất huyết Dengue hiện hành của Bộ Y tế.

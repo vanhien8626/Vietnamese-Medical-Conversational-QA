@@ -1,0 +1,2 @@
+{"id":"example-1","question":"Sốt xuất huyết do virus nào gây ra?","context":"Sốt xuất huyết là bệnh truyền nhiễm do virus Dengue gây ra.","answers":{"text":["virus Dengue"],"answer_start":[39]},"history":[]}
+{"id":"example-2","question":"Nó lây qua cách nào?","context":"Sốt xuất huyết lây truyền chủ yếu qua vết đốt của muỗi Aedes.","answers":{"text":["qua vết đốt của muỗi Aedes"],"answer_start":[34]},"history":[{"question":"Sốt xuất huyết do virus nào gây ra?","answer":"Virus Dengue."}]}
